@@ -8,3 +8,5 @@ build/
 # VSCode cache
 .vscode/
 
+# shader build files
+shaders/*.spv

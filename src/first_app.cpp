@@ -12,7 +12,7 @@ namespace lve
         loadModels();
         createPipelineLayout();
         createPipeline();
-        createCommanBuffers();
+        createCommandBuffers();
     }
 
     FirstApp::~FirstApp()
@@ -35,9 +35,9 @@ namespace lve
     {
         std::vector<LveModel::Vertex> vertices
         {
-            {{0.0f, -0.5f}},
-            {{0.5f, 0.5f}},
-            {{-0.5f, 0.5f}}
+            {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+            {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+            {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
         };
 
         lveModel = std::make_unique<LveModel>(lveDevice, vertices);
@@ -72,7 +72,7 @@ namespace lve
         );
     }
 
-    void FirstApp::createCommanBuffers()
+    void FirstApp::createCommandBuffers()
     {
         commandBuffers.resize(lveSwapChain.imageCount());
 

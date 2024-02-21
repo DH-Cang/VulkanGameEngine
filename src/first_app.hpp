@@ -29,7 +29,7 @@ namespace lve {
         void loadModels();
         void createPipelineLayout();
         void createPipeline();
-        void createCommanBuffers();
+        void createCommandBuffers();
         void drawFrame();
 
         LveWindow lveWindow{WIDTH, HEIGHT, "hello vulkan"};
