@@ -6,7 +6,9 @@ set_languages("c++20")
 
 add_rules("mode.debug","mode.releasedbg", "mode.release", "mode.minsizerel")
 
-add_requires("vulkansdk", "glfw", "glm")
+add_requires("glfw", "glm")
+add_requires("vulkansdk")
+
 
 target("main")
     set_default(true)
