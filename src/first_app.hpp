@@ -1,10 +1,9 @@
 #pragma once
 
 #include "lve_window.hpp"
-#include "lve_pipeline.hpp"
 #include "lve_device.hpp"
-#include "lve_swap_chain.hpp"
 #include "lve_game_object.hpp"
+#include "lve_renderer.hpp"
 
 // std
 #include <memory>
@@ -27,22 +26,11 @@ namespace lve {
 
     private:
         void loadGameObjects();
-        void createPipelineLayout();
-        void createPipeline();
-        void createCommandBuffers();
-        void freeCommandBuffers();
-        void drawFrame();
-        void recreateSwapChain();
-        void recordCommandBuffer(int imageIndex);
-        void renderGameObjects(VkCommandBuffer commandBuffer);
 
         LveWindow lveWindow{WIDTH, HEIGHT, "hello vulkan"};
         LveDevice lveDevice{lveWindow};
-        std::unique_ptr<LveSwapChain> lveSwapChain;
-        std::unique_ptr<LvePipeline> lvePipeline;
-        VkPipelineLayout pipelineLayout;
-        std::vector<VkCommandBuffer> commandBuffers;
-        //std::unique_ptr<LveModel> lveModel;
+        LveRenderer lveRenderer{lveWindow, lveDevice};
+        
         std::vector<LveGameObject> gameObjects;
     };
 
