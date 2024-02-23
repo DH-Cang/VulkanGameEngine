@@ -1,3 +1,2 @@
-D:\VulkanSDK\1.3.275.0\Bin\glslc.exe shaders\simple_shader.vert -o shaders\simple_shader.vert.spv
-D:\VulkanSDK\1.3.275.0\Bin\glslc.exe shaders\simple_shader.frag -o shaders\simple_shader.frag.spv
-pause
+D:\VulkanSDK\1.3.275.0\Bin\glslc.exe shaders\src\simple_shader.vert -o shaders\bin\simple_shader.vert.spv
+D:\VulkanSDK\1.3.275.0\Bin\glslc.exe shaders\src\simple_shader.frag -o shaders\bin\simple_shader.frag.spv

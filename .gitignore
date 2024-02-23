@@ -9,4 +9,4 @@ build/
 .vscode/
 
 # shader build files
-shaders/*.spv
+shaders/bin/

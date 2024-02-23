@@ -16,3 +16,8 @@ target("main")
     add_files("src/*.cpp")
     add_packages("vulkansdk", "glfw", "glm")
     set_rundir("$(projectdir)")
+
+    after_build(function (target)
+        os.exec("compile_shader.bat")
+        print("shader compilation completed")
+    end)
