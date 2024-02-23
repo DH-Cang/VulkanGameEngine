@@ -4,6 +4,7 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 // std
 #include <stdexcept>
@@ -13,13 +14,14 @@ namespace lve
 {
     struct SimplePushConstantData
     {
+        glm::mat2 transform{1.0f};
         glm::vec2 offset;
         alignas(16) glm::vec3 color; // make sure the memory align as 16 bytes, to match the data alignment in shader
     };
 
     FirstApp::FirstApp()
     {
-        loadModels();
+        loadGameObjects();
         createPipelineLayout();
         recreateSwapChain();
         createCommandBuffers();
@@ -41,7 +43,7 @@ namespace lve
         vkDeviceWaitIdle(lveDevice.device());
     }
 
-    void FirstApp::loadModels()
+    void FirstApp::loadGameObjects()
     {
         std::vector<LveModel::Vertex> vertices
         {
@@ -50,7 +52,27 @@ namespace lve
             {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
         };
 
-        lveModel = std::make_unique<LveModel>(lveDevice, vertices);
+        auto lveModel = std::make_shared<LveModel>(lveDevice, vertices);
+    
+        // https://www.color-hex.com/color-palette/5361
+        std::vector<glm::vec3> colors{
+            {1.f, .7f, .73f},
+            {1.f, .87f, .73f},
+            {1.f, 1.f, .73f},
+            {.73f, 1.f, .8f},
+            {.73, .88f, 1.f}  //
+        };
+        for (auto& color : colors) {
+            color = glm::pow(color, glm::vec3{2.2f});
+        }
+        for (int i = 0; i < 40; i++) {
+            auto triangle = LveGameObject::createGameObject();
+            triangle.model = lveModel;
+            triangle.transform2d.scale = glm::vec2(.5f) + i * 0.025f;
+            triangle.transform2d.rotation = i * glm::pi<float>() * .025f;
+            triangle.color = colors[i % colors.size()];
+            gameObjects.push_back(std::move(triangle));
+        }
     }
 
 
@@ -147,9 +169,6 @@ namespace lve
 
     void FirstApp::recordCommandBuffer(int imageIndex)
     {
-        static int frame = 0;
-        frame = (frame + 1) % 10000;
-
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -185,30 +204,44 @@ namespace lve
         vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
         vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
 
-        lvePipeline->bind(commandBuffers[imageIndex]);
-        lveModel->bind(commandBuffers[imageIndex]);
-
-        for(int j=0; j<4; j++)
-        {
-            SimplePushConstantData push{};
-            push.offset = {-0.5f + frame * 0.0002f, -0.4f + j * 0.25f};
-            push.color = {0.0f, 0.0f, 0.2f + 0.2f * j};
-
-            vkCmdPushConstants(
-                commandBuffers[imageIndex], 
-                pipelineLayout, 
-                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 
-                0, 
-                sizeof(SimplePushConstantData), 
-                &push);
-
-            lveModel->draw(commandBuffers[imageIndex]);
-        }
+        renderGameObjects(commandBuffers[imageIndex]);
 
         vkCmdEndRenderPass(commandBuffers[imageIndex]);
         if(vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to record command buffer");
+        }
+    }
+
+    void FirstApp::renderGameObjects(VkCommandBuffer commandBuffer)
+    {
+        // update
+        int i = 0;
+        for (auto& obj : gameObjects) {
+            i += 1;
+            obj.transform2d.rotation =
+                glm::mod<float>(obj.transform2d.rotation + 0.00001f * i, 2.f * glm::pi<float>());
+        }
+
+        // render
+        lvePipeline->bind(commandBuffer);
+        for(auto& obj : gameObjects)
+        {
+            SimplePushConstantData push{};
+            push.offset = obj.transform2d.translation;
+            push.color = obj.color;
+            push.transform = obj.transform2d.mat2();
+
+            vkCmdPushConstants(
+                commandBuffer, 
+                pipelineLayout, 
+                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 
+                0, 
+                sizeof(SimplePushConstantData), 
+                &push);
+            
+            obj.model->bind(commandBuffer);
+            obj.model->draw(commandBuffer);
         }
     }
 
