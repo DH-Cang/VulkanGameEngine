@@ -1,3 +1,11 @@
+/*************************************************
+Renderer Class:
+1. SwapChain
+2. cmd buffers' life cycle
+3. draw a frame
+
+We only have one render in an application
+*************************************************/
 #pragma once
 
 #include "lve_window.hpp"
