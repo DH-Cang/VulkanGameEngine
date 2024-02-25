@@ -71,16 +71,6 @@ namespace lve
     {
         auto projectionView = camera.getProjection() * camera.getView();
 
-        // update
-        int i = 0;
-        for (auto& obj : gameObjects) {
-            i += 1;
-            obj.transform.rotation.y =
-                glm::mod<float>(obj.transform.rotation.y + 0.001f * i, 2.f * glm::pi<float>());
-            obj.transform.rotation.x =
-                glm::mod<float>(obj.transform.rotation.x + 0.0005f * i, 2.f * glm::pi<float>());
-        }
-
         // render
         lvePipeline->bind(commandBuffer);
         for(auto& obj : gameObjects)
