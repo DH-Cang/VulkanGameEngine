@@ -69,6 +69,8 @@ namespace lve
         std::vector<LveGameObject>& gameObjects, 
         const LveCamera& camera)
     {
+        auto projectionView = camera.getProjection() * camera.getView();
+
         // update
         int i = 0;
         for (auto& obj : gameObjects) {
@@ -85,7 +87,7 @@ namespace lve
         {
             SimplePushConstantData push{};
             push.color = obj.color;
-            push.transform = camera.getProjection() * obj.transform.mat4();
+            push.transform = projectionView * obj.transform.mat4();
 
             vkCmdPushConstants(
                 commandBuffer, 

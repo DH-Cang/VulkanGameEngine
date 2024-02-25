@@ -20,10 +20,22 @@ namespace lve
             float fovy, float aspect, float near, float far
         );
 
+        void setViewDirection(
+            glm::vec3 position, glm::vec3 direction, glm::vec3 up = glm::vec3{0.0f, -1.0f, 0.0f});
+
+        void setViewTarget(
+            glm::vec3 position, glm::vec3 target, glm::vec3 up = glm::vec3{0.0f, -1.0f, 0.0f});
+
+        void setViewYXZ(glm::vec3 position, glm::vec3 rotation);
+
         [[nodiscard("can't neglect projection matrix of camera")]]
         const glm::mat4& getProjection() const { return projectionMatrix; }
 
+        [[nodiscard("can't neglect view matrix of camera")]]
+        const glm::mat4& getView() const { return viewMatrix; }
+
     private:
         glm::mat4 projectionMatrix{1.0f};
+        glm::mat4 viewMatrix{1.0f};
     };
 }

@@ -68,7 +68,7 @@ namespace lve
         vkFreeCommandBuffers(
             lveDevice.device(), 
             lveDevice.getCommandPool(),
-            static_cast<float>(commandBuffers.size()),
+            static_cast<uint32_t>(commandBuffers.size()),
             commandBuffers.data());
         commandBuffers.clear();
     }
