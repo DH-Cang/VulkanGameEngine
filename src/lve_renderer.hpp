@@ -30,6 +30,9 @@ namespace lve {
         [[nodiscard("neglect vkRenderPass")]]
         VkRenderPass getSwapChainRenderPass() const { return lveSwapChain->getRenderPass(); }
         
+        [[nodiscard("neglect aspect ratio")]]
+        float getAspectRatio() const { return lveSwapChain->extentAspectRatio(); }
+
         [[nodiscard("neglect isFrameInProgress")]]
         bool isFrameInProgress() const { return isFrameStarted; }
         

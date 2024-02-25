@@ -12,6 +12,7 @@ It is application's resbonsibility to check whether an object is compatible to a
 *************************************************/
 #pragma once
 
+#include "lve_camera.hpp"
 #include "lve_pipeline.hpp"
 #include "lve_device.hpp"
 #include "lve_game_object.hpp"
@@ -30,7 +31,10 @@ namespace lve {
         SimpleRenderSystem(const SimpleRenderSystem&) = delete;
         SimpleRenderSystem& operator=(const SimpleRenderSystem&) = delete;
 
-        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<LveGameObject>& gameObjects);
+        void renderGameObjects(
+            VkCommandBuffer commandBuffer, 
+            std::vector<LveGameObject>& gameObjects, 
+            const LveCamera& camera);
 
     private:
         void createPipelineLayout();
