@@ -14,7 +14,8 @@ namespace lve
     struct SimplePushConstantData
     {
         glm::mat4 transform{1.0f};
-        alignas(16) glm::vec3 color; // make sure the memory align as 16 bytes, to match the data alignment in shader
+        glm::mat4 normalMatrix{1.0f};
+        //alignas(16) glm::vec3 color; // make sure the memory align as 16 bytes, to match the data alignment in shader
     };
 
     SimpleRenderSystem::SimpleRenderSystem(LveDevice& device, VkRenderPass renderPass):
@@ -76,8 +77,9 @@ namespace lve
         for(auto& obj : gameObjects)
         {
             SimplePushConstantData push{};
-            push.color = obj.color;
-            push.transform = projectionView * obj.transform.mat4();
+            auto modelMatrix = obj.transform.mat4();
+            push.transform = projectionView * modelMatrix;
+            push.normalMatrix = obj.transform.normalMatrix();
 
             vkCmdPushConstants(
                 commandBuffer, 
