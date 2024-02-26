@@ -208,20 +208,11 @@ namespace lve
                         attrib.vertices[3 * index.vertex_index + 2]
                     };
 
-                    // optional: per vertex color
-                    auto colorIndex = 3 * index.vertex_index + 2;
-                    if(colorIndex < attrib.colors.size())
-                    {
-                        vertex.color = {
-                        attrib.colors[colorIndex - 2],
-                        attrib.colors[colorIndex - 1],
-                        attrib.colors[colorIndex - 0]
+                    vertex.color = {
+                        attrib.colors[3 * index.vertex_index + 0],
+                        attrib.colors[3 * index.vertex_index + 1],
+                        attrib.colors[3 * index.vertex_index + 2]
                     };
-                    }
-                    else // default color
-                    {
-                        vertex.color = {1.0f, 1.0f, 1.0f};
-                    }
                 }
 
                 if(index.normal_index >= 0)
