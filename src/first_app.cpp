@@ -65,6 +65,10 @@ namespace lve
             float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
             currentTime = newTime;
 
+            float fps = 1.0f / frameTime;
+            std::string title = std::string("hello vulkan!   FPS: ") + std::to_string(fps);
+            glfwSetWindowTitle(lveWindow.getGLFWwindow(), title.c_str());
+
             cameraController.moveInPlaneXZ(lveWindow.getGLFWwindow(), frameTime, viewerObject);
             camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
