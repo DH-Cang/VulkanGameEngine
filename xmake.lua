@@ -16,6 +16,7 @@ target("main")
     add_files("src/*.cpp")
     add_packages("vulkansdk", "glfw", "glm")
     set_rundir("$(projectdir)")
+    set_exceptions("cxx") -- prevent error message: exceptions disabled
 
     after_build(function (target)
         os.exec("compile_shader.bat")
