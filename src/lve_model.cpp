@@ -4,7 +4,7 @@
 
 // libs
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "libs\tiny_obj_loader.h"
+#include "..\third_party\tiny_obj_loader.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
@@ -90,9 +90,7 @@ namespace lve
             return;
         }
 
-        VkDeviceSize bufferSize = sizeof(indices[0]) * index_count;
         uint32_t indexSize = sizeof(indices[0]);
-        
 
         LveBuffer stagingBuffer
         {
