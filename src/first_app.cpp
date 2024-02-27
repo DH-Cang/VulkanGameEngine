@@ -21,7 +21,10 @@ namespace lve
     struct GlobalUbo
     {
         alignas(16) glm::mat4 projectionView{1.0f};
-        alignas(16) glm::vec3 lightDirection = glm::normalize(glm::vec3{1.0f, -3.0f, -1.0f});
+        alignas(16) glm::vec4 ambientLightColor{1.0f, 1.0f, 1.0f, 0.02f}; // w is light intensity
+        alignas(16) glm::vec3 lightPosition{-1.0f};
+        alignas(16) glm::vec4 lightColor{1.0f}; // w is light intensity
+        //alignas(16) glm::vec3 lightDirection = glm::normalize(glm::vec3{1.0f, -3.0f, -1.0f});
     };
 
     FirstApp::FirstApp()
@@ -80,6 +83,7 @@ namespace lve
         camera.setViewTarget(glm::vec3{-1.f, -2.f, 2.f}, glm::vec3{0.0f, 0.0f, 2.5f});
 
         auto viewerObject = LveGameObject::createGameObject();
+        viewerObject.transform.translation.z = -2.5f;
         KeyboardMovementController cameraController{};
 
         auto currentTime = std::chrono::high_resolution_clock::now();
@@ -100,7 +104,7 @@ namespace lve
             camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
             float aspect = lveRenderer.getAspectRatio();
-            camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.1f, 100.0f);
+            camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.1f, 1000.0f);
 
             if(auto commandBuffer = lveRenderer.beginFrame())
             {
@@ -138,8 +142,15 @@ namespace lve
 
         auto gameObj = LveGameObject::createGameObject();
         gameObj.model = lveModel;
-        gameObj.transform.translation = {0.0f, 0.5f, 2.5f};
+        gameObj.transform.translation = {0.0f, 0.5f, 0.0f};
         gameObj.transform.scale = glm::vec3{3.0f, 2.0f, 3.0f};
         gameObjects.push_back(std::move(gameObj));
+
+        lveModel = LveModel::createModelFromFile(lveDevice, "./assets/models/quad.obj");
+        auto floor = LveGameObject::createGameObject();
+        floor.model = lveModel;
+        floor.transform.translation = {0.0f, 0.5f, 0.0f};
+        floor.transform.scale = glm::vec3{3.0f, 1.0f, 3.0f};
+        gameObjects.push_back(std::move(floor));
     } 
 };
