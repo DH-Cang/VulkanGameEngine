@@ -20,17 +20,25 @@ namespace lve
 {
     struct GlobalUbo
     {
-        glm::mat4 projectionView{1.0f};
-        glm::vec3 lightDirection = glm::normalize(glm::vec3{1.0f, -3.0f, -1.0f});
+        alignas(16) glm::mat4 projectionView{1.0f};
+        alignas(16) glm::vec3 lightDirection = glm::normalize(glm::vec3{1.0f, -3.0f, -1.0f});
     };
 
     FirstApp::FirstApp()
     {
+        // descriptor pool
+        // TODO: add a pool manager to automatically create and free descriptor pools
+        globalPool = LveDescriptorPool::Builder(lveDevice)
+            .setMaxSets(LveSwapChain::MAX_FRAMES_IN_FLIGHT) // can create 2 descriptor sets
+            .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, LveSwapChain::MAX_FRAMES_IN_FLIGHT) // have 2 uniform buffer descriptor in total
+            .build();
+
         loadGameObjects();
     }
 
     FirstApp::~FirstApp()
     {
+        globalPool = nullptr;
     }
 
     void FirstApp::run()
@@ -48,7 +56,26 @@ namespace lve
             uboBuffers[i]->map();
         }
 
-        SimpleRenderSystem simpleRenderSystem(lveDevice, lveRenderer.getSwapChainRenderPass());
+        // this set layout should be matched with shader reflection
+        // used in pipeline creation, telling shader bindings
+        auto globalSetLayout = LveDescriptorSetLayout::Builder(lveDevice)
+            .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT) // we want one uniform buffer at the binding 0 of vertex shader
+            .build();
+
+        // we have 2 descritor sets, whose number is equivelent with resources(buffers and textures)
+        std::vector<VkDescriptorSet> globalDescriptorSets(LveSwapChain::MAX_FRAMES_IN_FLIGHT);
+        for(int i=0; i<globalDescriptorSets.size(); i++)
+        {
+            auto bufferInfo = uboBuffers[i]->descriptorInfo();
+            LveDescriptorWriter(*globalSetLayout, *globalPool)
+                .writeBuffer(0, &bufferInfo)
+                .build(globalDescriptorSets[i]);
+        }
+
+        SimpleRenderSystem simpleRenderSystem(
+            lveDevice, 
+            lveRenderer.getSwapChainRenderPass(), 
+            globalSetLayout->getDescriptorSetLayout());
         LveCamera camera{};
         camera.setViewTarget(glm::vec3{-1.f, -2.f, 2.f}, glm::vec3{0.0f, 0.0f, 2.5f});
 
@@ -83,7 +110,8 @@ namespace lve
                     frameIndex,
                     frameTime,
                     commandBuffer,
-                    camera
+                    camera,
+                    globalDescriptorSets[frameIndex]
                 };
 
                 // update
