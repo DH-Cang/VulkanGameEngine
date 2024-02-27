@@ -11,7 +11,8 @@ layout (location = 0) out vec4 outColor;
 // uniform buffer
 layout(set = 0, binding = 0) uniform GlobalUbo
 {
-    mat4 projectionViewMatrix;
+    mat4 projectionMatrix;
+    mat4 viewMatrix;
     vec4 ambientLightColor; // w is intensity
     vec3 lightPosition;
     vec4 lightColor; // w is intensity
