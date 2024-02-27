@@ -8,6 +8,7 @@
 
 // std
 #include <stdexcept>
+#include <map>
 
 namespace lve
 {
@@ -58,6 +59,7 @@ namespace lve
 
         PipelineConfigInfo pipelineConfig{};
         LvePipeline::defaultPipelineConfigInfo(pipelineConfig);
+        LvePipeline::enableAlphaBlending(pipelineConfig);
         pipelineConfig.bindingDescriptions.clear();
         pipelineConfig.attributeDescriptions.clear();
         pipelineConfig.renderPass = renderPass;
@@ -100,6 +102,19 @@ namespace lve
 
     void PointLightSystem::render(FrameInfo& frameInfo)
     {
+        // sort lights
+        std::map<float, LveGameObject::id_t> sorted;
+        for(auto& kv : frameInfo.gameObjects)
+        {
+            auto& obj = kv.second;
+            if(obj.pointLight == nullptr) continue;
+
+            // calculate distance
+            auto offset = frameInfo.camera.getPosition() - obj.transform.translation;
+            float disSquared = glm::dot(offset, offset);
+            sorted[disSquared] = obj.getId();
+        }
+
         // render
         lvePipeline->bind(frameInfo.commandBuffer);
 
@@ -114,10 +129,11 @@ namespace lve
             nullptr
         );
 
-        for(auto& kv : frameInfo.gameObjects)
+        // iterate through sorted lights in reverse order
+        for(auto it = sorted.rbegin(); it != sorted.rend(); it++)
         {
-            auto& obj = kv.second;
-            if(obj.pointLight == nullptr) continue;
+            // use game obj id to find light obj
+            auto& obj = frameInfo.gameObjects.at(it->second);
 
             PointLightPushConstants push{};
             push.position = glm::vec4(obj.transform.translation, 1.0f);
