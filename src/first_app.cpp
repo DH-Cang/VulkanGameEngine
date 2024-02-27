@@ -62,7 +62,7 @@ namespace lve
         // this set layout should be matched with shader reflection
         // used in pipeline creation, telling shader bindings
         auto globalSetLayout = LveDescriptorSetLayout::Builder(lveDevice)
-            .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT) // we want one uniform buffer at the binding 0 of vertex shader
+            .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT) // we want one uniform buffer at the binding 0 of vertex shader and frag shader
             .build();
 
         // we have 2 descritor sets, whose number is equivelent with resources(buffers and textures)
@@ -115,7 +115,8 @@ namespace lve
                     frameTime,
                     commandBuffer,
                     camera,
-                    globalDescriptorSets[frameIndex]
+                    globalDescriptorSets[frameIndex],
+                    gameObjects
                 };
 
                 // update
@@ -126,7 +127,7 @@ namespace lve
 
                 // render
                 lveRenderer.beginSwapChainRenderPass(commandBuffer);
-                simpleRenderSystem.renderGameObjects(frameInfo, gameObjects);
+                simpleRenderSystem.renderGameObjects(frameInfo);
                 lveRenderer.endSwapChainRenderPass(commandBuffer);
                 lveRenderer.endFrame();
             }
@@ -139,18 +140,24 @@ namespace lve
     void FirstApp::loadGameObjects()
     {
         std::shared_ptr<LveModel> lveModel = LveModel::createModelFromFile(lveDevice, "./assets/models/flat_vase.obj");
+        auto flatVase = LveGameObject::createGameObject();
+        flatVase.model = lveModel;
+        flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
+        flatVase.transform.scale = glm::vec3{3.0f, 2.0f, 3.0f};
+        gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
-        auto gameObj = LveGameObject::createGameObject();
-        gameObj.model = lveModel;
-        gameObj.transform.translation = {0.0f, 0.5f, 0.0f};
-        gameObj.transform.scale = glm::vec3{3.0f, 2.0f, 3.0f};
-        gameObjects.push_back(std::move(gameObj));
+        lveModel = LveModel::createModelFromFile(lveDevice, "./assets/models/smooth_vase.obj");
+        auto smoothVase = LveGameObject::createGameObject();
+        smoothVase.model = lveModel;
+        smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
+        smoothVase.transform.scale = glm::vec3{3.0f, 2.0f, 3.0f};
+        gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
 
         lveModel = LveModel::createModelFromFile(lveDevice, "./assets/models/quad.obj");
         auto floor = LveGameObject::createGameObject();
         floor.model = lveModel;
         floor.transform.translation = {0.0f, 0.5f, 0.0f};
         floor.transform.scale = glm::vec3{3.0f, 1.0f, 3.0f};
-        gameObjects.push_back(std::move(floor));
+        gameObjects.emplace(floor.getId(), std::move(floor));
     } 
 };
