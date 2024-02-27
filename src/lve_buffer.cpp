@@ -37,8 +37,8 @@ LveBuffer::LveBuffer(
     VkMemoryPropertyFlags memoryPropertyFlags,
     VkDeviceSize minOffsetAlignment)
     : lveDevice{device},
-      instanceSize{instanceSize},
       instanceCount{instanceCount},
+      instanceSize{instanceSize},
       usageFlags{usageFlags},
       memoryPropertyFlags{memoryPropertyFlags} {
   alignmentSize = getAlignment(instanceSize, minOffsetAlignment);

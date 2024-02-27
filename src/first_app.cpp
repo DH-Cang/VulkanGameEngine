@@ -13,18 +13,15 @@
 
 // std
 #include <chrono>
-#include <stdexcept>
-#include <array>
 
 namespace lve
 {
     struct GlobalUbo
     {
-        alignas(16) glm::mat4 projectionView{1.0f};
-        alignas(16) glm::vec4 ambientLightColor{1.0f, 1.0f, 1.0f, 0.02f}; // w is light intensity
-        alignas(16) glm::vec3 lightPosition{-1.0f};
+        glm::mat4 projectionView{1.0f};
+        glm::vec4 ambientLightColor{1.0f, 1.0f, 1.0f, 0.02f}; // w is light intensity
+        glm::vec3 lightPosition{-1.0f};
         alignas(16) glm::vec4 lightColor{1.0f}; // w is light intensity
-        //alignas(16) glm::vec3 lightDirection = glm::normalize(glm::vec3{1.0f, -3.0f, -1.0f});
     };
 
     FirstApp::FirstApp()
@@ -54,7 +51,7 @@ namespace lve
                 sizeof(GlobalUbo),
                 1,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT  
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
             );
             uboBuffers[i]->map();
         }
