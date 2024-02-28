@@ -11,4 +11,3 @@ add_requires("glfw", "glm", "vulkansdk")
 add_packages("vulkansdk", "glfw", "glm")
 
 includes("src", "shaders")
-
