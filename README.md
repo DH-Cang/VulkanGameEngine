@@ -5,7 +5,7 @@ This is my game engine built with vulkan.
 * Platform: win64
 * Xmake: https://xmake.io/#/
 * VulkanSDK: https://www.lunarg.com/vulkan-sdk/
-* 
+
 ## Build
 ```
 xmake f -p windows -a x64 -m release
