@@ -1,10 +1,10 @@
 #pragma once
 
-#include "lve_window.hpp"
-#include "lve_device.hpp"
-#include "lve_game_object.hpp"
-#include "lve_renderer.hpp"
-#include "lve_descriptors.hpp"
+#include "Vk/lve_window.hpp"
+#include "Vk/lve_device.hpp"
+#include "Vk/lve_game_object.hpp"
+#include "Vk/lve_renderer.hpp"
+#include "Vk/lve_descriptors.hpp"
 
 // std
 #include <memory>

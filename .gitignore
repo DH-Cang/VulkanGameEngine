@@ -7,6 +7,3 @@ build/
 
 # VSCode cache
 .vscode/
-
-# shader build files
-shaders/bin/

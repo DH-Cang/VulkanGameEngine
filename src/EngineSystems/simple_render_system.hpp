@@ -12,28 +12,27 @@ It is application's resbonsibility to check whether an object is compatible to a
 *************************************************/
 #pragma once
 
-#include "lve_camera.hpp"
-#include "lve_pipeline.hpp"
-#include "lve_device.hpp"
-#include "lve_game_object.hpp"
-#include "lve_frame_info.hpp"
+#include "Vk/lve_camera.hpp"
+#include "Vk/lve_pipeline.hpp"
+#include "Vk/lve_device.hpp"
+#include "Vk/lve_game_object.hpp"
+#include "Vk/lve_frame_info.hpp"
 
 // std
 #include <memory>
 
 namespace lve {
 
-    class PointLightSystem
+    class SimpleRenderSystem
     {
     public:
-        PointLightSystem(LveDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
-        ~PointLightSystem();
+        SimpleRenderSystem(LveDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
+        ~SimpleRenderSystem();
 
-        PointLightSystem(const PointLightSystem&) = delete;
-        PointLightSystem& operator=(const PointLightSystem&) = delete;
+        SimpleRenderSystem(const SimpleRenderSystem&) = delete;
+        SimpleRenderSystem& operator=(const SimpleRenderSystem&) = delete;
 
-        void update(FrameInfo& frameInfo, GlobalUbo& ubo);
-        void render(FrameInfo& frameInfo);
+        void renderGameObjects(FrameInfo& frameInfo);
 
     private:
         void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);

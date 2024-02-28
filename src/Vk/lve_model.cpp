@@ -4,7 +4,7 @@
 
 // libs
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "..\third_party\tiny_obj_loader.h"
+#include "ThirdParty\tiny_obj_loader.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 

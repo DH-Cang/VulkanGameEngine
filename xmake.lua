@@ -1,24 +1,14 @@
-set_project("vulkan")
-
+set_project("CDH_VulkanGameEngine")
 set_arch("x64")
 set_warnings("all")
 set_languages("c++20")
+set_exceptions("cxx") -- prevent error message: exceptions disabled
 
-add_rules("mode.debug","mode.releasedbg", "mode.release", "mode.minsizerel")
+add_rules("mode.debug", "mode.release")
+set_defaultmode("release") -- set default compile mode
 
-add_requires("glfw", "glm")
-add_requires("vulkansdk")
+add_requires("glfw", "glm", "vulkansdk")
+add_packages("vulkansdk", "glfw", "glm")
 
+includes("src", "shaders")
 
-target("main")
-    set_default(true)
-    set_kind("binary")
-    add_files("src/*.cpp")
-    add_packages("vulkansdk", "glfw", "glm")
-    set_rundir("$(projectdir)")
-    set_exceptions("cxx") -- prevent error message: exceptions disabled
-
-    after_build(function (target)
-        os.exec("compile_shader.bat")
-        print("shader compilation completed")
-    end)

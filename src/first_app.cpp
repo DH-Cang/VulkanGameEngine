@@ -1,10 +1,11 @@
 #include "first_app.hpp"
 
-#include "lve_buffer.hpp"
-#include "lve_camera.hpp"
-#include "simple_render_system.hpp"
-#include "point_light_system.hpp"
-#include "keyboard_movement_controller.hpp"
+#include "Vk/lve_buffer.hpp"
+#include "Vk/lve_camera.hpp"
+#include "Vk/keyboard_movement_controller.hpp"
+
+#include "EngineSystems/simple_render_system.hpp"
+#include "EngineSystems/point_light_system.hpp"
 
 //libs
 #define GLM_FORCE_RADIANS
