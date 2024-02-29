@@ -29,13 +29,6 @@ namespace lve
             .build();
 
         loadGameObjects();
-
-        // TODO: temp
-        tempTexture = std::make_unique<LveTexture>(lveDevice);
-        std::string path(".\\assets\\textures\\70591182.jpg");
-        tempTexture->createTextureFromFile(path);
-        tempTexture->createTextureImageView();
-        tempTexture->createTextureSampler();
     }
 
     FirstApp::~FirstApp()
@@ -156,6 +149,8 @@ namespace lve
 
     void FirstApp::loadGameObjects()
     {
+        tempTexture = LveTexture::createTextureFromFile(lveDevice, ".\\assets\\textures\\70591182.jpg");
+
         std::shared_ptr<LveModel> lveModel = LveModel::createModelFromFile(lveDevice, "./assets/models/flat_vase.obj");
         auto flatVase = LveGameObject::createGameObject();
         flatVase.model = lveModel;
