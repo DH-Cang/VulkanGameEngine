@@ -42,8 +42,6 @@ namespace lve
                 throw std::runtime_error("swap chain image(or depth) format has changed!");
             }
         }
-
-        // TODO
     }
     
 

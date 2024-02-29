@@ -1,6 +1,7 @@
 #include "first_app.hpp"
 
 #include "Vk/lve_buffer.hpp"
+#include "Vk/lve_texture.hpp"
 #include "Vk/lve_camera.hpp"
 #include "Vk/keyboard_movement_controller.hpp"
 
@@ -18,8 +19,6 @@
 
 namespace lve
 {
-    
-
     FirstApp::FirstApp()
     {
         // descriptor pool
@@ -30,6 +29,11 @@ namespace lve
             .build();
 
         loadGameObjects();
+
+        // TODO: temp
+        LveTexture texture(lveDevice);
+        std::string path(".\\assets\\textures\\statue-1275469_1280.png");
+        texture.createTextureFromFile(path);
     }
 
     FirstApp::~FirstApp()
