@@ -5,6 +5,7 @@
 #include "Vk/lve_game_object.hpp"
 #include "Vk/lve_renderer.hpp"
 #include "Vk/lve_descriptors.hpp"
+#include "Vk/lve_texture.hpp"
 
 // std
 #include <memory>
@@ -34,6 +35,8 @@ namespace lve {
 
         std::unique_ptr<LveDescriptorPool> globalPool{};
         LveGameObject::Map gameObjects;
+
+        std::unique_ptr<LveTexture> tempTexture;
     };
 
 }

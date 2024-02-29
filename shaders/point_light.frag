@@ -20,6 +20,8 @@ layout(set = 0, binding = 0) uniform GlobalUbo
     int numLights;
 } ubo;
 
+layout(set = 0, binding = 1) uniform sampler2D texSampler;
+
 layout(push_constant) uniform Push
 {
     vec4 position;

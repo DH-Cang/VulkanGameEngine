@@ -1,7 +1,6 @@
 #include "first_app.hpp"
 
 #include "Vk/lve_buffer.hpp"
-#include "Vk/lve_texture.hpp"
 #include "Vk/lve_camera.hpp"
 #include "Vk/keyboard_movement_controller.hpp"
 
@@ -26,16 +25,17 @@ namespace lve
         globalPool = LveDescriptorPool::Builder(lveDevice)
             .setMaxSets(LveSwapChain::MAX_FRAMES_IN_FLIGHT) // can create 2 descriptor sets
             .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, LveSwapChain::MAX_FRAMES_IN_FLIGHT) // have 2 uniform buffer descriptor in total
+            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, LveSwapChain::MAX_FRAMES_IN_FLIGHT)
             .build();
 
         loadGameObjects();
 
         // TODO: temp
-        LveTexture texture(lveDevice);
-        std::string path(".\\assets\\textures\\statue-1275469_1280.png");
-        texture.createTextureFromFile(path);
-        texture.createTextureImageView();
-        texture.createTextureSampler();
+        tempTexture = std::make_unique<LveTexture>(lveDevice);
+        std::string path(".\\assets\\textures\\70591182.jpg");
+        tempTexture->createTextureFromFile(path);
+        tempTexture->createTextureImageView();
+        tempTexture->createTextureSampler();
     }
 
     FirstApp::~FirstApp()
@@ -62,15 +62,18 @@ namespace lve
         // used in pipeline creation, telling shader bindings
         auto globalSetLayout = LveDescriptorSetLayout::Builder(lveDevice)
             .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT) // we want one uniform buffer at the binding 0 of vertex shader and frag shader
+            .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
             .build();
 
         // we have 2 descritor sets, whose number is equivelent with resources(buffers and textures)
         std::vector<VkDescriptorSet> globalDescriptorSets(LveSwapChain::MAX_FRAMES_IN_FLIGHT);
         for(int i=0; i<globalDescriptorSets.size(); i++)
         {
-            auto bufferInfo = uboBuffers[i]->descriptorInfo();
+            auto uboInfo = uboBuffers[i]->descriptorInfo();
+            auto textureInfo = tempTexture->getDescriptorImageInfo();
             LveDescriptorWriter(*globalSetLayout, *globalPool)
-                .writeBuffer(0, &bufferInfo)
+                .writeBuffer(0, &uboInfo)
+                .writeImage(1, &textureInfo)
                 .build(globalDescriptorSets[i]);
         }
 

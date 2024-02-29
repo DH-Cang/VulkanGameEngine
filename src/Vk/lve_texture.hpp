@@ -22,6 +22,8 @@ namespace lve
 
         void createTextureSampler();
 
+        VkDescriptorImageInfo getDescriptorImageInfo();
+
     private:
         LveDevice& lveDevice;
 
