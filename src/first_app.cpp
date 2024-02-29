@@ -34,6 +34,8 @@ namespace lve
         LveTexture texture(lveDevice);
         std::string path(".\\assets\\textures\\statue-1275469_1280.png");
         texture.createTextureFromFile(path);
+        texture.createTextureImageView();
+        texture.createTextureSampler();
     }
 
     FirstApp::~FirstApp()

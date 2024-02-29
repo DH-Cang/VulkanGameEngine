@@ -18,10 +18,18 @@ namespace lve
 
         void createTextureFromFile(std::string& path);
 
+        void createTextureImageView();
+
+        void createTextureSampler();
+
     private:
         LveDevice& lveDevice;
 
         VkImage textureImage;
         VkDeviceMemory textureImageMemory;
+
+        VkImageView textureImageView;
+
+        VkSampler textureSampler;
     };
 }
