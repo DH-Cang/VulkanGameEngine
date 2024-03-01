@@ -1,4 +1,4 @@
-#include "lve_game_object.hpp"
+#include "game_object.hpp"
 
 namespace lve
 {
@@ -60,9 +60,9 @@ namespace lve
             }};
     }
 
-    LveGameObject LveGameObject::makePointLight(float intensity, float radius, glm::vec3 color)
+    GameObject GameObject::makePointLight(float intensity, float radius, glm::vec3 color)
         {
-            LveGameObject gameObj = LveGameObject::createGameObject();
+            GameObject gameObj = GameObject::createGameObject();
             gameObj.color = color;
             gameObj.transform.scale.x = radius;
             gameObj.pointLight = std::make_unique<PointLightComponent>();

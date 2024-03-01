@@ -1,8 +1,7 @@
 #include "lve_model.hpp"
 
-#include "lve_util.hpp"
-
 // libs
+#include "ThirdParty\utility.hpp"
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "ThirdParty\tiny_obj_loader.h"
 #define GLM_ENABLE_EXPERIMENTAL
@@ -22,7 +21,7 @@ namespace std
         size_t operator()(lve::LveModel::Vertex const& vertex) const
         {
             size_t seed = 0;
-            lve::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
+            Util::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
             return seed;
         }
     };

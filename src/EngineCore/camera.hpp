@@ -8,7 +8,7 @@
 
 namespace lve 
 {
-    class LveCamera
+    class Camera
     {
     public:
 

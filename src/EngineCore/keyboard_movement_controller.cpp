@@ -2,7 +2,7 @@
 
 namespace lve 
 {
-    void KeyboardMovementController::moveInPlaneXZ(GLFWwindow* window, float dt, LveGameObject& gameObject)
+    void KeyboardMovementController::moveInPlaneXZ(GLFWwindow* window, float dt, GameObject& gameObject)
     {
         glm::vec3 rotate{0};
         if(glfwGetKey(window, keys.lookRight) == GLFW_PRESS)

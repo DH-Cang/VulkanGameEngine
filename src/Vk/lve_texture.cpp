@@ -1,4 +1,5 @@
 #include "lve_texture.hpp"
+#include "lve_buffer.hpp"
 
 // lib
 #define STB_IMAGE_IMPLEMENTATION

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lve_buffer.hpp"
+#include "lve_device.hpp"
 
 // std
 #include <string>

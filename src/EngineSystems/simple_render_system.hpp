@@ -12,11 +12,9 @@ It is application's resbonsibility to check whether an object is compatible to a
 *************************************************/
 #pragma once
 
-#include "Vk/lve_camera.hpp"
 #include "Vk/lve_pipeline.hpp"
 #include "Vk/lve_device.hpp"
-#include "Vk/lve_game_object.hpp"
-#include "Vk/lve_frame_info.hpp"
+#include "EngineCore/frame_info.hpp"
 
 // std
 #include <memory>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lve_model.hpp"
+#include "Vk/lve_model.hpp"
 
 // libs
 #include <glm/gtc/matrix_transform.hpp>
@@ -30,26 +30,26 @@ namespace lve
         float lightIntensity = 1.0f;
     };
 
-    class LveGameObject
+    class GameObject
     {
     public:
         using id_t = unsigned int;
-        using Map = std::unordered_map<id_t, LveGameObject>;
+        using Map = std::unordered_map<id_t, GameObject>;
 
-        static LveGameObject createGameObject()
+        static GameObject createGameObject()
         {
             static id_t currentId = 0;
-            return LveGameObject{currentId++};
+            return GameObject{currentId++};
         }
         
-        static LveGameObject makePointLight(
+        static GameObject makePointLight(
             float intensity = 10.0f, float radius = 0.1f, glm::vec3 color = glm::vec3{1.0f}
         );
 
-        LveGameObject(const LveGameObject&) = delete;
-        LveGameObject& operator=(const LveGameObject&) = delete;
-        LveGameObject(LveGameObject&&) = default;
-        //LveGameObject& operator=(const LveGameObject&&) = default;
+        GameObject(const GameObject&) = delete;
+        GameObject& operator=(const GameObject&) = delete;
+        GameObject(GameObject&&) = default;
+        //GameObject& operator=(const GameObject&&) = default;
 
         id_t getId() { return id; }
 
@@ -61,7 +61,7 @@ namespace lve
         std::unique_ptr<PointLightComponent> pointLight = nullptr;
 
     private:
-        LveGameObject(id_t objId) : id(objId) {}
+        GameObject(id_t objId) : id(objId) {}
         id_t id;
 
     };

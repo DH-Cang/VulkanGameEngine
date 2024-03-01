@@ -2,10 +2,11 @@
 
 #include "Vk/lve_window.hpp"
 #include "Vk/lve_device.hpp"
-#include "Vk/lve_game_object.hpp"
 #include "Vk/lve_renderer.hpp"
 #include "Vk/lve_descriptors.hpp"
 #include "Vk/lve_texture.hpp"
+
+#include "EngineCore/game_object.hpp"
 
 // std
 #include <memory>
@@ -34,7 +35,7 @@ namespace lve {
         LveRenderer lveRenderer{lveWindow, lveDevice};
 
         std::unique_ptr<LveDescriptorPool> globalPool{};
-        LveGameObject::Map gameObjects;
+        GameObject::Map gameObjects;
 
         std::unique_ptr<LveTexture> tempTexture;
     };

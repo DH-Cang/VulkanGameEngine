@@ -103,7 +103,7 @@ namespace lve
     void PointLightSystem::render(FrameInfo& frameInfo)
     {
         // sort lights
-        std::map<float, LveGameObject::id_t> sorted;
+        std::map<float, GameObject::id_t> sorted;
         for(auto& kv : frameInfo.gameObjects)
         {
             auto& obj = kv.second;

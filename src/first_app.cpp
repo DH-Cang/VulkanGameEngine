@@ -1,8 +1,9 @@
 #include "first_app.hpp"
 
 #include "Vk/lve_buffer.hpp"
-#include "Vk/lve_camera.hpp"
-#include "Vk/keyboard_movement_controller.hpp"
+
+#include "EngineCore/camera.hpp"
+#include "EngineCore/keyboard_movement_controller.hpp"
 
 #include "EngineSystems/simple_render_system.hpp"
 #include "EngineSystems/point_light_system.hpp"
@@ -82,10 +83,10 @@ namespace lve
         };
 
 
-        LveCamera camera{};
+        Camera camera{};
         camera.setViewTarget(glm::vec3{-1.f, -2.f, 2.f}, glm::vec3{0.0f, 0.0f, 2.5f});
 
-        auto viewerObject = LveGameObject::createGameObject();
+        auto viewerObject = GameObject::createGameObject();
         viewerObject.transform.translation.z = -2.5f;
         KeyboardMovementController cameraController{};
 
@@ -152,21 +153,21 @@ namespace lve
         tempTexture = LveTexture::createTextureFromFile(lveDevice, ".\\assets\\textures\\70591182.jpg");
 
         std::shared_ptr<LveModel> lveModel = LveModel::createModelFromFile(lveDevice, "./assets/models/flat_vase.obj");
-        auto flatVase = LveGameObject::createGameObject();
+        auto flatVase = GameObject::createGameObject();
         flatVase.model = lveModel;
         flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
         flatVase.transform.scale = glm::vec3{3.0f, 2.0f, 3.0f};
         gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
         lveModel = LveModel::createModelFromFile(lveDevice, "./assets/models/smooth_vase.obj");
-        auto smoothVase = LveGameObject::createGameObject();
+        auto smoothVase = GameObject::createGameObject();
         smoothVase.model = lveModel;
         smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
         smoothVase.transform.scale = glm::vec3{3.0f, 2.0f, 3.0f};
         gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
 
         lveModel = LveModel::createModelFromFile(lveDevice, "./assets/models/quad.obj");
-        auto floor = LveGameObject::createGameObject();
+        auto floor = GameObject::createGameObject();
         floor.model = lveModel;
         floor.transform.translation = {0.0f, 0.5f, 0.0f};
         floor.transform.scale = glm::vec3{3.0f, 1.0f, 3.0f};
@@ -184,7 +185,7 @@ namespace lve
 
         for(int i=0; i < lightColors.size(); i++)
         {
-            auto pointLight = LveGameObject::makePointLight(0.2f);
+            auto pointLight = GameObject::makePointLight(0.2f);
             pointLight.color = lightColors[i];
             auto rotateLight = glm::rotate(
                 glm::mat4(1.0f),
