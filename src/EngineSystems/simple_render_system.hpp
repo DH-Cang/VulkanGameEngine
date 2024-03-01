@@ -19,26 +19,27 @@ It is application's resbonsibility to check whether an object is compatible to a
 // std
 #include <memory>
 
-namespace lve {
+namespace EngineSystem
+{
 
     class SimpleRenderSystem
     {
     public:
-        SimpleRenderSystem(LveDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
+        SimpleRenderSystem(Vk::LveDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
         ~SimpleRenderSystem();
 
         SimpleRenderSystem(const SimpleRenderSystem&) = delete;
         SimpleRenderSystem& operator=(const SimpleRenderSystem&) = delete;
 
-        void renderGameObjects(FrameInfo& frameInfo);
+        void renderGameObjects(EngineCore::FrameInfo& frameInfo);
 
     private:
         void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
         void createPipeline(VkRenderPass renderPass);
 
-        LveDevice& lveDevice;
+        Vk::LveDevice& lveDevice;
         
-        std::unique_ptr<LvePipeline> lvePipeline;
+        std::unique_ptr<Vk::LvePipeline> lvePipeline;
         VkPipelineLayout pipelineLayout;
     };
 

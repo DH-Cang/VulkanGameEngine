@@ -9,7 +9,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace lve
+namespace EngineCore
 {
     struct TransformComponent
     {
@@ -57,7 +57,7 @@ namespace lve
         TransformComponent transform;
 
         // optional pointer component
-        std::shared_ptr<LveModel> model{};
+        std::shared_ptr<Vk::LveModel> model{};
         std::unique_ptr<PointLightComponent> pointLight = nullptr;
 
     private:

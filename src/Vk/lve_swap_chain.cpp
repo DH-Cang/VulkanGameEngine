@@ -9,7 +9,7 @@
 #include <set>
 #include <stdexcept>
 
-namespace lve {
+namespace Vk {
 
 LveSwapChain::LveSwapChain(LveDevice &deviceRef, VkExtent2D extent)
     : device{deviceRef}, windowExtent{extent} {
@@ -428,4 +428,4 @@ VkFormat LveSwapChain::findDepthFormat() {
       VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
-}  // namespace lve
+}  // namespace Vk

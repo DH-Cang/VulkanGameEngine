@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <array>
 
-namespace lve
+namespace Vk
 {
     LveRenderer::LveRenderer(LveWindow& window, LveDevice& device):
         lveWindow(window), lveDevice(device)

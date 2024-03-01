@@ -11,7 +11,7 @@
 #include <cassert>
 #include <cstring>
  
-namespace lve {
+namespace Vk {
  
 /**
  * Returns the minimum instance size required to be compatible with devices minOffsetAlignment
@@ -198,5 +198,5 @@ VkResult LveBuffer::invalidateIndex(int index) {
   return invalidate(alignmentSize, index * alignmentSize);
 }
  
-}  // namespace lve
+}  // namespace Vk
  

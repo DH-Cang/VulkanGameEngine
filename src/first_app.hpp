@@ -11,33 +11,29 @@
 // std
 #include <memory>
 
-namespace lve {
+class FirstApp
+{
+public:
+    static constexpr int WIDTH = 800;
+    static constexpr int HEIGHT = 600;
 
-    class FirstApp
-    {
-    public:
-        static constexpr int WIDTH = 800;
-        static constexpr int HEIGHT = 600;
+    FirstApp();
+    ~FirstApp();
 
-        FirstApp();
-        ~FirstApp();
+    FirstApp(const FirstApp&) = delete;
+    FirstApp& operator=(const FirstApp&) = delete;
 
-        FirstApp(const FirstApp&) = delete;
-        FirstApp& operator=(const FirstApp&) = delete;
+    void run();
 
-        void run();
+private:
+    void loadGameObjects();
 
-    private:
-        void loadGameObjects();
+    Vk::LveWindow lveWindow{WIDTH, HEIGHT, "hello vulkan"};
+    Vk::LveDevice lveDevice{lveWindow};
+    Vk::LveRenderer lveRenderer{lveWindow, lveDevice};
 
-        LveWindow lveWindow{WIDTH, HEIGHT, "hello vulkan"};
-        LveDevice lveDevice{lveWindow};
-        LveRenderer lveRenderer{lveWindow, lveDevice};
+    std::unique_ptr<Vk::LveDescriptorPool> globalPool{};
+    EngineCore::GameObject::Map gameObjects;
 
-        std::unique_ptr<LveDescriptorPool> globalPool{};
-        GameObject::Map gameObjects;
-
-        std::unique_ptr<LveTexture> tempTexture;
-    };
-
-}
+    std::unique_ptr<Vk::LveTexture> tempTexture;
+};

@@ -12,7 +12,7 @@
 #include <vector>
 #include <memory>
 
-namespace lve
+namespace Vk
 {
     class LveModel
     {

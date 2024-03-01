@@ -4,7 +4,7 @@
 #include <cassert>
 #include <stdexcept>
  
-namespace lve {
+namespace Vk {
  
 // *************** Descriptor Set Layout Builder *********************
  
@@ -193,5 +193,5 @@ namespace lve {
         vkUpdateDescriptorSets(pool.lveDevice.device(), writes.size(), writes.data(), 0, nullptr);
     }
     
-}  // namespace lve
+}  // namespace Vk
  

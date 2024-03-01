@@ -7,7 +7,7 @@
 
 int main()
 {
-    lve::FirstApp app{};
+    FirstApp app{};
     try {
         app.run();
     } catch (const std::exception &e) {

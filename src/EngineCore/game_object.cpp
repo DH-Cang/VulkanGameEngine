@@ -1,6 +1,6 @@
 #include "game_object.hpp"
 
-namespace lve
+namespace EngineCore
 {
     glm::mat4 TransformComponent::mat4()
     {

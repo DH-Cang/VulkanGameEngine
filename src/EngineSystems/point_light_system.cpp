@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include <map>
 
-namespace lve
+namespace EngineSystem
 {
     struct PointLightPushConstants
     {
@@ -20,7 +20,7 @@ namespace lve
     };
 
 
-    PointLightSystem::PointLightSystem(LveDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout):
+    PointLightSystem::PointLightSystem(Vk::LveDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout):
         lveDevice{device}
     {
         createPipelineLayout(globalSetLayout);
@@ -57,14 +57,14 @@ namespace lve
     {
         assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
-        PipelineConfigInfo pipelineConfig{};
-        LvePipeline::defaultPipelineConfigInfo(pipelineConfig);
-        LvePipeline::enableAlphaBlending(pipelineConfig);
+        Vk::PipelineConfigInfo pipelineConfig{};
+        Vk::LvePipeline::defaultPipelineConfigInfo(pipelineConfig);
+        Vk::LvePipeline::enableAlphaBlending(pipelineConfig);
         pipelineConfig.bindingDescriptions.clear();
         pipelineConfig.attributeDescriptions.clear();
         pipelineConfig.renderPass = renderPass;
         pipelineConfig.pipelineLayout = pipelineLayout;
-        lvePipeline = std::make_unique<LvePipeline>(
+        lvePipeline = std::make_unique<Vk::LvePipeline>(
             lveDevice, 
             "./build/ShaderBin/point_light.vert.spv", 
             "./build/ShaderBin/point_light.frag.spv", 
@@ -72,7 +72,7 @@ namespace lve
         );
     }
 
-    void PointLightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo)
+    void PointLightSystem::update(EngineCore::FrameInfo& frameInfo, EngineCore::GlobalUbo& ubo)
     {
         auto rotateLight = glm::rotate(
                 glm::mat4(1.0f),
@@ -100,10 +100,10 @@ namespace lve
     }
 
 
-    void PointLightSystem::render(FrameInfo& frameInfo)
+    void PointLightSystem::render(EngineCore::FrameInfo& frameInfo)
     {
         // sort lights
-        std::map<float, GameObject::id_t> sorted;
+        std::map<float, EngineCore::GameObject::id_t> sorted;
         for(auto& kv : frameInfo.gameObjects)
         {
             auto& obj = kv.second;

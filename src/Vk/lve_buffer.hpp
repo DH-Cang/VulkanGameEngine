@@ -2,7 +2,7 @@
  
 #include "lve_device.hpp"
  
-namespace lve {
+namespace Vk {
  
     class LveBuffer {
     public:
@@ -56,4 +56,4 @@ namespace lve {
         VkMemoryPropertyFlags memoryPropertyFlags;
     };
  
-}  // namespace lve
+}  // namespace Vk

@@ -2,7 +2,7 @@
 
 #include "game_object.hpp"
 
-namespace lve 
+namespace EngineCore 
 {
     class KeyboardMovementController
     {
@@ -22,7 +22,7 @@ namespace lve
             int lookDown = GLFW_KEY_DOWN;
         };
 
-        void moveInPlaneXZ(GLFWwindow* window, float dt, GameObject& gameObject);
+        void moveInPlaneXZ(GLFWwindow* window, float dt, EngineCore::GameObject& gameObject);
 
         KeyMappings keys{};
         float moveSpeed{2.0f};

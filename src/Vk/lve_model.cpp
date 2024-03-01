@@ -16,9 +16,9 @@
 namespace std
 {
     template <>
-    struct hash<lve::LveModel::Vertex>
+    struct hash<Vk::LveModel::Vertex>
     {
-        size_t operator()(lve::LveModel::Vertex const& vertex) const
+        size_t operator()(Vk::LveModel::Vertex const& vertex) const
         {
             size_t seed = 0;
             Util::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
@@ -27,7 +27,7 @@ namespace std
     };
 }
 
-namespace lve
+namespace Vk
 {
 
     LveModel::LveModel(LveDevice& device, const LveModel::Builder& builder):

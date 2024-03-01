@@ -9,7 +9,7 @@
 // std
 #include <stdexcept>
 
-namespace lve
+namespace EngineSystem
 {
     struct SimplePushConstantData
     {
@@ -18,7 +18,7 @@ namespace lve
         //alignas(16) glm::vec3 color; // make sure the memory align as 16 bytes, to match the data alignment in shader
     };
 
-    SimpleRenderSystem::SimpleRenderSystem(LveDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout):
+    SimpleRenderSystem::SimpleRenderSystem(Vk::LveDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout):
         lveDevice{device}
     {
         createPipelineLayout(globalSetLayout);
@@ -55,11 +55,11 @@ namespace lve
     {
         assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
-        PipelineConfigInfo pipelineConfig{};
-        LvePipeline::defaultPipelineConfigInfo(pipelineConfig);
+        Vk::PipelineConfigInfo pipelineConfig{};
+        Vk::LvePipeline::defaultPipelineConfigInfo(pipelineConfig);
         pipelineConfig.renderPass = renderPass;
         pipelineConfig.pipelineLayout = pipelineLayout;
-        lvePipeline = std::make_unique<LvePipeline>(
+        lvePipeline = std::make_unique<Vk::LvePipeline>(
             lveDevice, 
             "./build/ShaderBin/simple_shader.vert.spv", 
             "./build/ShaderBin/simple_shader.frag.spv", 
@@ -67,7 +67,7 @@ namespace lve
         );
     }
 
-    void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo)
+    void SimpleRenderSystem::renderGameObjects(EngineCore::FrameInfo& frameInfo)
     {
         // render
         lvePipeline->bind(frameInfo.commandBuffer);

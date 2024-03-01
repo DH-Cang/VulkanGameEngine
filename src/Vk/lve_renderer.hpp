@@ -16,7 +16,7 @@ We only have one render in an application
 #include <memory>
 #include <cassert>
 
-namespace lve {
+namespace Vk {
 
     class LveRenderer
     {

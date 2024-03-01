@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <iostream>
 
-namespace lve
+namespace Vk
 {
     void LveTexture::Builder::loadTextureFromFile(const std::string& path)
     {

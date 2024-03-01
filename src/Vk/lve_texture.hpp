@@ -6,7 +6,7 @@
 #include <string>
 #include <memory>
 
-namespace lve
+namespace Vk
 {
     class LveTexture
     {

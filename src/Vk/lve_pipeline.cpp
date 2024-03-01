@@ -5,7 +5,7 @@
 #include <iostream>
 #include <cassert>
 
-namespace lve {
+namespace Vk {
 
     LvePipeline::LvePipeline(
             LveDevice& device, 

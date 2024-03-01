@@ -1,8 +1,8 @@
 #include "keyboard_movement_controller.hpp"
 
-namespace lve 
+namespace EngineCore 
 {
-    void KeyboardMovementController::moveInPlaneXZ(GLFWwindow* window, float dt, GameObject& gameObject)
+    void KeyboardMovementController::moveInPlaneXZ(GLFWwindow* window, float dt, EngineCore::GameObject& gameObject)
     {
         glm::vec3 rotate{0};
         if(glfwGetKey(window, keys.lookRight) == GLFW_PRESS)

@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
  
-namespace lve {
+namespace Vk {
  
     // helper to build descriptor set layout for pipeline creation
     class LveDescriptorSetLayout
@@ -111,4 +111,4 @@ namespace lve {
         std::vector<VkWriteDescriptorSet> writes;
     };
  
-}  // namespace lve
+}  // namespace Vk

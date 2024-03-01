@@ -6,7 +6,7 @@
 // lib
 #include <vulkan/vulkan.h>
 
-namespace lve
+namespace EngineCore
 {
 
 #define MAX_LIGHTS 10
@@ -34,6 +34,6 @@ namespace lve
         VkCommandBuffer commandBuffer;
         Camera& camera;
         VkDescriptorSet globalDescriptorSets;
-        GameObject::Map& gameObjects;
+        EngineCore::GameObject::Map& gameObjects;
     };
 }

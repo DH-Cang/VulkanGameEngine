@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 
 
-namespace lve 
+namespace EngineCore 
 {
     class Camera
     {

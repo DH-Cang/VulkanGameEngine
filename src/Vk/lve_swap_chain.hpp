@@ -10,7 +10,7 @@
 #include <vector>
 #include <memory>
 
-namespace lve {
+namespace Vk {
 
 class LveSwapChain {
  public:
@@ -88,4 +88,4 @@ class LveSwapChain {
   size_t currentFrame = 0;
 };
 
-}  // namespace lve
+}  // namespace Vk

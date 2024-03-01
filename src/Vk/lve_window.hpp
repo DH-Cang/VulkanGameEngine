@@ -2,7 +2,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <string>
-namespace lve
+namespace Vk
 {
     class LveWindow
     {
@@ -32,4 +32,4 @@ namespace lve
         std::string m_window_name;
         GLFWwindow *m_window;
     };
-} // namespace lve
+} // namespace Vk

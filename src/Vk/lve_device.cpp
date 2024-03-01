@@ -6,7 +6,7 @@
 #include <set>
 #include <unordered_set>
 
-namespace lve {
+namespace Vk {
 
 // local callback functions
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -582,4 +582,4 @@ void LveDevice::transitionImageLayout(VkImage image, VkFormat format, VkImageLay
     endSingleTimeCommands(commandBuffer);
 }
 
-}  // namespace lve
+}  // namespace Vk
