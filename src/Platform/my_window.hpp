@@ -2,16 +2,17 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <string>
-namespace Vk
+
+namespace Platform
 {
-    class LveWindow
+    class MyWindow
     {
     public:
-        LveWindow(int width, int height, std::string name);
-        ~LveWindow();
+        MyWindow(int width, int height, std::string name);
+        ~MyWindow();
 
-        LveWindow(const LveWindow &) = delete;
-        LveWindow& operator=(const LveWindow &) = delete;
+        MyWindow(const MyWindow &) = delete;
+        MyWindow& operator=(const MyWindow &) = delete;
 
         bool shouldClose() { return glfwWindowShouldClose(m_window); }
         VkExtent2D getExtent() { return VkExtent2D{static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_width)}; }
@@ -22,7 +23,7 @@ namespace Vk
         void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface);
 
     private:
-        static void frameBufferResizeCallback(GLFWwindow* window, int width, int height);
+        static void frameBufferResizeCallback(GLFWwindow* glfwWindow, int width, int height);
         void initWindow();
 
         int m_width;
@@ -32,4 +33,4 @@ namespace Vk
         std::string m_window_name;
         GLFWwindow *m_window;
     };
-} // namespace Vk
+}

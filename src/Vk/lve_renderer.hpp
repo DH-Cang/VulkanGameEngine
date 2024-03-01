@@ -8,7 +8,7 @@ We only have one render in an application
 *************************************************/
 #pragma once
 
-#include "lve_window.hpp"
+#include "Platform/my_window.hpp"
 #include "lve_device.hpp"
 #include "lve_swap_chain.hpp"
 
@@ -21,7 +21,7 @@ namespace Vk {
     class LveRenderer
     {
     public:
-        LveRenderer(LveWindow& window, LveDevice& device);
+        LveRenderer(Platform::MyWindow& window, LveDevice& device);
         ~LveRenderer();
 
         LveRenderer(const LveRenderer&) = delete;
@@ -58,7 +58,7 @@ namespace Vk {
         void freeCommandBuffers();
         void recreateSwapChain();
 
-        LveWindow& lveWindow;
+        Platform::MyWindow& myWindow;
         LveDevice& lveDevice;
         std::unique_ptr<LveSwapChain> lveSwapChain;
         std::vector<VkCommandBuffer> commandBuffers;

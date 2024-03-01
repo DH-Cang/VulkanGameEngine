@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vk/lve_window.hpp"
+#include "Platform/my_window.hpp"
 #include "Vk/lve_device.hpp"
 #include "Vk/lve_renderer.hpp"
 #include "Vk/lve_descriptors.hpp"
@@ -28,9 +28,9 @@ public:
 private:
     void loadGameObjects();
 
-    Vk::LveWindow lveWindow{WIDTH, HEIGHT, "hello vulkan"};
-    Vk::LveDevice lveDevice{lveWindow};
-    Vk::LveRenderer lveRenderer{lveWindow, lveDevice};
+    Platform::MyWindow myWindow{WIDTH, HEIGHT, "hello vulkan"};
+    Vk::LveDevice lveDevice{myWindow};
+    Vk::LveRenderer lveRenderer{myWindow, lveDevice};
 
     std::unique_ptr<Vk::LveDescriptorPool> globalPool{};
     EngineCore::GameObject::Map gameObjects;

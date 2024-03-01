@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lve_window.hpp"
+#include "Platform/my_window.hpp"
 
 // std lib headers
 #include <string>
@@ -30,7 +30,7 @@ class LveDevice {
   const bool enableValidationLayers = true;
 #endif
 
-  LveDevice(LveWindow &window);
+  LveDevice(Platform::MyWindow &window);
   ~LveDevice();
 
   // Not copyable or movable
@@ -95,7 +95,7 @@ class LveDevice {
   VkInstance instance;
   VkDebugUtilsMessengerEXT debugMessenger;
   VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-  LveWindow &window;
+  Platform::MyWindow &window;
   VkCommandPool commandPool;
 
   VkDevice device_;

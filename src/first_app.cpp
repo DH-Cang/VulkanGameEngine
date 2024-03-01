@@ -91,7 +91,7 @@ void FirstApp::run()
 
     auto currentTime = std::chrono::high_resolution_clock::now();
 
-    while(!lveWindow.shouldClose())
+    while(!myWindow.shouldClose())
     {
         glfwPollEvents();
 
@@ -101,9 +101,9 @@ void FirstApp::run()
 
         float fps = 1.0f / frameTime;
         std::string title = std::string("hello vulkan!   FPS: ") + std::to_string(fps);
-        glfwSetWindowTitle(lveWindow.getGLFWwindow(), title.c_str());
+        glfwSetWindowTitle(myWindow.getGLFWwindow(), title.c_str());
 
-        cameraController.moveInPlaneXZ(lveWindow.getGLFWwindow(), frameTime, viewerObject);
+        cameraController.moveInPlaneXZ(myWindow.getGLFWwindow(), frameTime, viewerObject);
         camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
         float aspect = lveRenderer.getAspectRatio();

@@ -6,8 +6,8 @@
 
 namespace Vk
 {
-    LveRenderer::LveRenderer(LveWindow& window, LveDevice& device):
-        lveWindow(window), lveDevice(device)
+    LveRenderer::LveRenderer(Platform::MyWindow& window, LveDevice& device):
+        myWindow(window), lveDevice(device)
     {
         recreateSwapChain();
         createCommandBuffers();
@@ -20,9 +20,9 @@ namespace Vk
 
     void LveRenderer::recreateSwapChain()
     {
-        auto extent = lveWindow.getExtent();
+        auto extent = myWindow.getExtent();
         while (extent.width == 0 || extent.height == 0) {
-            extent = lveWindow.getExtent();
+            extent = myWindow.getExtent();
             glfwWaitEvents();
         }
 
@@ -113,9 +113,9 @@ namespace Vk
 
         auto result = lveSwapChain->submitCommandBuffers(&commandBuffer, &currentImageIndex);
 
-        if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || lveWindow.wasWindowResized())
+        if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || myWindow.wasWindowResized())
         {
-            lveWindow.resetWindowResizedFlag();
+            myWindow.resetWindowResizedFlag();
             recreateSwapChain();
         }
         else if(result != VK_SUCCESS)

@@ -47,7 +47,7 @@ void DestroyDebugUtilsMessengerEXT(
 }
 
 // class member functions
-LveDevice::LveDevice(LveWindow &window) : window{window} {
+LveDevice::LveDevice(Platform::MyWindow &window) : window{window} {
   createInstance();
   setupDebugMessenger();
   createSurface();
