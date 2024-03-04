@@ -4,6 +4,7 @@
 
 #include "EngineCore/camera.hpp"
 #include "EngineCore/keyboard_movement_controller.hpp"
+#include "EngineCore/model.hpp"
 
 #include "EngineSystems/simple_render_system.hpp"
 #include "EngineSystems/point_light_system.hpp"
@@ -151,26 +152,33 @@ void FirstApp::loadGameObjects()
 {
     tempTexture = Vk::LveTexture::createTextureFromFile(lveDevice, ".\\assets\\textures\\70591182.jpg");
 
-    std::shared_ptr<Vk::LveModel> lveModel = Vk::LveModel::createModelFromFile(lveDevice, "./assets/models/flat_vase.obj");
+    std::shared_ptr<EngineCore::Model> model = EngineCore::Model::createModelFromFile(lveDevice, "./assets/models/flat_vase.obj", "./assets/models/");
     auto flatVase = EngineCore::GameObject::createGameObject();
-    flatVase.model = lveModel;
+    flatVase.model = model;
     flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
     flatVase.transform.scale = glm::vec3{3.0f, 2.0f, 3.0f};
     gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
-    lveModel = Vk::LveModel::createModelFromFile(lveDevice, "./assets/models/smooth_vase.obj");
+    model = EngineCore::Model::createModelFromFile(lveDevice, "./assets/models/smooth_vase.obj", "./assets/models/");
     auto smoothVase = EngineCore::GameObject::createGameObject();
-    smoothVase.model = lveModel;
+    smoothVase.model = model;
     smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
     smoothVase.transform.scale = glm::vec3{3.0f, 2.0f, 3.0f};
     gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
 
-    lveModel = Vk::LveModel::createModelFromFile(lveDevice, "./assets/models/quad.obj");
+    model = EngineCore::Model::createModelFromFile(lveDevice, "./assets/models/quad.obj", "./assets/models/");
     auto floor = EngineCore::GameObject::createGameObject();
-    floor.model = lveModel;
+    floor.model = model;
     floor.transform.translation = {0.0f, 0.5f, 0.0f};
     floor.transform.scale = glm::vec3{3.0f, 1.0f, 3.0f};
     gameObjects.emplace(floor.getId(), std::move(floor));
+
+    model = EngineCore::Model::createModelFromFile(lveDevice, "./assets/models/cube.obj", "./assets/models/");
+    auto cube = EngineCore::GameObject::createGameObject();
+    cube.model = model;
+    cube.transform.translation = {0.0f, 0.0f, -1.0f};
+    cube.transform.scale = glm::vec3{0.25f, 0.25f, 0.25f};
+    gameObjects.emplace(cube.getId(), std::move(cube));
 
 
     std::vector<glm::vec3> lightColors{
@@ -194,4 +202,6 @@ void FirstApp::loadGameObjects()
         pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f));
         gameObjects.emplace(pointLight.getId(), std::move(pointLight));
     }   
+
+
 } 

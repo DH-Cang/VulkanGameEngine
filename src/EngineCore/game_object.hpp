@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vk/lve_model.hpp"
+#include "model.hpp"
 
 // libs
 #include <glm/gtc/matrix_transform.hpp>
@@ -57,7 +57,7 @@ namespace EngineCore
         TransformComponent transform;
 
         // optional pointer component
-        std::shared_ptr<Vk::LveModel> model{};
+        std::shared_ptr<Model> model{};
         std::unique_ptr<PointLightComponent> pointLight = nullptr;
 
     private:

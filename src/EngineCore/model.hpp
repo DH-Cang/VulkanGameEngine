@@ -4,10 +4,12 @@
 
 #include "Vk/lve_model.hpp"
 
+// std
+#include <memory>
+
 
 namespace EngineCore
 {
-    class SubModel;
     class Model
     {
     public:
@@ -16,29 +18,14 @@ namespace EngineCore
         Model(const Model&) = delete;
         Model& operator=(const Model&) = delete;
 
-        void bind(VkCommandBuffer commandBuffer);
-        void draw(VkCommandBuffer commandBuffer);
+        static std::unique_ptr<Model> createModelFromFile(Vk::LveDevice& device, const std::string& filePath, const std::string& mtlBasePath);
+        void bindAndDraw(VkCommandBuffer commandBuffer);
+        
     private:
-        std::vector<SubModel> subModels;
+        std::vector<std::unique_ptr<Vk::LveModel>> lveModels;
+        std::vector<Material> materials;
 
         Vk::LveDevice& lveDevice;
         
-    };
-
-
-
-    class SubModel
-    {
-    public:
-        SubModel(Vk::LveDevice& device, const Vk::LveModel::Builder& builder);
-        ~SubModel() = default;
-        SubModel(const SubModel&) = delete;
-        SubModel& operator=(const SubModel&) = delete;
-
-    private:
-        std::unique_ptr<Vk::LveModel> lveModel;
-        Material material;
-
-        friend class Model;
     };
 }

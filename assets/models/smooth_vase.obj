@@ -1,6 +1,6 @@
 # Blender v2.90.1 OBJ File: 'ceramic_vase_01_4k.blend'
 # www.blender.org
-mtllib smooth_vase.mtl
+mtllib untitled.mtl
 o ceramic_vase_01_Cylinder.009
 v -0.012938 -0.001253 0.052491
 v 0.000000 -0.398924 0.054443
@@ -15848,7 +15848,7 @@ vn 0.0287 0.9992 -0.0255
 vn -0.0046 0.9992 -0.0381
 vn 0.0136 0.9992 0.0359
 vn -0.0373 0.9992 0.0092
-usemtl ceramic_vase_01
+usemtl Material
 s 1
 f 1145/1/1 3851/2/2 1280/3/3
 f 1277/4/4 1278/5/5 3851/2/2

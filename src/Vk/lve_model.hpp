@@ -38,16 +38,12 @@ namespace Vk
         {
             std::vector<Vertex> vertices{};
             std::vector<uint32_t> indices{};
-
-            void loadModel(const std::string& filePath);
         };
 
         LveModel(LveDevice& device, const LveModel::Builder& builder);
         ~LveModel();
         LveModel(const LveModel&) = delete;
         LveModel& operator=(const LveModel&) = delete;
-
-        static std::unique_ptr<LveModel> createModelFromFile(LveDevice& device, const std::string& filePath);
 
         void bind(VkCommandBuffer commandBuffer);
         void draw(VkCommandBuffer commandBuffer);

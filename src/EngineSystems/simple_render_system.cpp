@@ -100,8 +100,7 @@ namespace EngineSystem
                 sizeof(SimplePushConstantData), 
                 &push);
             
-            obj.model->bind(frameInfo.commandBuffer);
-            obj.model->draw(frameInfo.commandBuffer);
+            obj.model->bindAndDraw(frameInfo.commandBuffer);
         }
     }
 

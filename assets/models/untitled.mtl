@@ -1,0 +1,6 @@
+newmtl Material
+Ka 0.000 0.000 1.000
+newmtl Material2
+Ka 0.000 1.000 0.000
+newmtl Material3
+Ka 1.000 0.000 0.000
