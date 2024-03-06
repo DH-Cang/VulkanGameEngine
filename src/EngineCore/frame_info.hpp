@@ -33,7 +33,7 @@ namespace EngineCore
         float frameTime;
         VkCommandBuffer commandBuffer;
         Camera& camera;
-        VkDescriptorSet globalDescriptorSets;
+        const std::vector<VkDescriptorSet>& descriptorSets;
         EngineCore::GameObject::Map& gameObjects;
     };
 }

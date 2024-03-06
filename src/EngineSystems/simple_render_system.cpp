@@ -18,10 +18,10 @@ namespace EngineSystem
         //alignas(16) glm::vec3 color; // make sure the memory align as 16 bytes, to match the data alignment in shader
     };
 
-    SimpleRenderSystem::SimpleRenderSystem(Vk::LveDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout):
+    SimpleRenderSystem::SimpleRenderSystem(Vk::LveDevice& device, VkRenderPass renderPass, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts):
         lveDevice{device}
     {
-        createPipelineLayout(globalSetLayout);
+        createPipelineLayout(descriptorSetLayouts);
         createPipeline(renderPass);
     }
 
@@ -30,14 +30,12 @@ namespace EngineSystem
         vkDestroyPipelineLayout(lveDevice.device(), pipelineLayout, nullptr);
     }
 
-    void SimpleRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout)
+    void SimpleRenderSystem::createPipelineLayout(const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts)
     {
         VkPushConstantRange pushConstantRange{};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstantRange.offset = 0;
         pushConstantRange.size = sizeof(SimplePushConstantData);
-
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -77,8 +75,8 @@ namespace EngineSystem
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             pipelineLayout,
             0,
-            1,
-            &frameInfo.globalDescriptorSets,
+            frameInfo.descriptorSets.size(),
+            frameInfo.descriptorSets.data(),
             0,
             nullptr
         );

@@ -25,7 +25,7 @@ namespace EngineSystem
     class SimpleRenderSystem
     {
     public:
-        SimpleRenderSystem(Vk::LveDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
+        SimpleRenderSystem(Vk::LveDevice& device, VkRenderPass renderPass, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts);
         ~SimpleRenderSystem();
 
         SimpleRenderSystem(const SimpleRenderSystem&) = delete;
@@ -34,7 +34,7 @@ namespace EngineSystem
         void renderGameObjects(EngineCore::FrameInfo& frameInfo);
 
     private:
-        void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
+        void createPipelineLayout(const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts);
         void createPipeline(VkRenderPass renderPass);
 
         Vk::LveDevice& lveDevice;

@@ -24,9 +24,9 @@ FirstApp::FirstApp()
     // descriptor pool
     // TODO: add a pool manager to automatically create and free descriptor pools
     globalPool = Vk::LveDescriptorPool::Builder(lveDevice)
-        .setMaxSets(Vk::LveSwapChain::MAX_FRAMES_IN_FLIGHT) // can create 2 descriptor sets
-        .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Vk::LveSwapChain::MAX_FRAMES_IN_FLIGHT) // have 2 uniform buffer descriptor in total
-        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, Vk::LveSwapChain::MAX_FRAMES_IN_FLIGHT)
+        .setMaxSets(1000) // can create 2 descriptor sets
+        .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000) // have 2 uniform buffer descriptor in total
+        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 50)
         .build();
 
     loadGameObjects();
@@ -52,35 +52,52 @@ void FirstApp::run()
         uboBuffers[i]->map();
     }
 
+    // ================================= global descriptor ==========================
     // this set layout should be matched with shader reflection
     // used in pipeline creation, telling shader bindings
     auto globalSetLayout = Vk::LveDescriptorSetLayout::Builder(lveDevice)
         .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT) // we want one uniform buffer at the binding 0 of vertex shader and frag shader
-        .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
         .build();
+
+    // ===================================== texture descriptor =====================================
+    auto textureSetLayout = Vk::LveDescriptorSetLayout::Builder(lveDevice)
+        .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+        .build();
+
+    std::vector<VkDescriptorSetLayout> descriptorSetLayouts{
+        globalSetLayout->getDescriptorSetLayout(), 
+        textureSetLayout->getDescriptorSetLayout()
+    };
+    EngineSystem::SimpleRenderSystem simpleRenderSystem{
+        lveDevice, 
+        lveRenderer.getSwapChainRenderPass(), 
+        descriptorSetLayouts
+    };
+    EngineSystem::PointLightSystem pointLightSystem{
+        lveDevice, 
+        lveRenderer.getSwapChainRenderPass(), 
+        descriptorSetLayouts
+    };
 
     // we have 2 descritor sets, whose number is equivelent with resources(buffers and textures)
     std::vector<VkDescriptorSet> globalDescriptorSets(Vk::LveSwapChain::MAX_FRAMES_IN_FLIGHT);
     for(int i=0; i<globalDescriptorSets.size(); i++)
     {
         auto uboInfo = uboBuffers[i]->descriptorInfo();
-        auto textureInfo = tempTexture->getDescriptorImageInfo();
         Vk::LveDescriptorWriter(*globalSetLayout, *globalPool)
             .writeBuffer(0, &uboInfo)
-            .writeImage(1, &textureInfo)
             .build(globalDescriptorSets[i]);
     }
 
-    EngineSystem::SimpleRenderSystem simpleRenderSystem{
-        lveDevice, 
-        lveRenderer.getSwapChainRenderPass(), 
-        globalSetLayout->getDescriptorSetLayout()
-    };
-    EngineSystem::PointLightSystem pointLightSystem{
-        lveDevice, 
-        lveRenderer.getSwapChainRenderPass(), 
-        globalSetLayout->getDescriptorSetLayout()
-    };
+    // we have 2 descritor sets, whose number is equivelent with resources(buffers and textures)
+    std::vector<VkDescriptorSet> textureDescriptorSets(Vk::LveSwapChain::MAX_FRAMES_IN_FLIGHT);
+    for(int i=0; i<textureDescriptorSets.size(); i++)
+    {
+        auto textureInfo = tempTexture->getDescriptorImageInfo();
+        Vk::LveDescriptorWriter(*textureSetLayout, *globalPool)
+            .writeImage(0, &textureInfo)
+            .build(textureDescriptorSets[i]);
+    }
 
 
     EngineCore::Camera camera{};
@@ -113,13 +130,17 @@ void FirstApp::run()
         if(auto commandBuffer = lveRenderer.beginFrame())
         {
             int frameIndex = lveRenderer.getFrameIndex();
+            std::vector<VkDescriptorSet> descriptorSets{
+                globalDescriptorSets[frameIndex],
+                textureDescriptorSets[frameIndex]
+            };
             EngineCore::FrameInfo frameInfo
             {
                 frameIndex,
                 frameTime,
                 commandBuffer,
                 camera,
-                globalDescriptorSets[frameIndex],
+                descriptorSets,
                 gameObjects
             };
 

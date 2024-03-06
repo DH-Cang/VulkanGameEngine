@@ -25,7 +25,7 @@ namespace EngineSystem
     class PointLightSystem
     {
     public:
-        PointLightSystem(Vk::LveDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
+        PointLightSystem(Vk::LveDevice& device, VkRenderPass renderPass, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts);
         ~PointLightSystem();
 
         PointLightSystem(const PointLightSystem&) = delete;
@@ -35,7 +35,7 @@ namespace EngineSystem
         void render(EngineCore::FrameInfo& frameInfo);
 
     private:
-        void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
+        void createPipelineLayout(const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts);
         void createPipeline(VkRenderPass renderPass);
 
         Vk::LveDevice& lveDevice;
