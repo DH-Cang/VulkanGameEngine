@@ -1,4 +1,4 @@
-includes("EngineSystems", "Vk", "EngineCore", "Platform");
+includes("EngineSystems", "Vk", "EngineCore", "Platform", "ThirdParty");
 
 target("VulkanGameEngine")
     set_default(true) -- set this target as default build
