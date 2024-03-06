@@ -1,6 +1,7 @@
 #include "first_app.hpp"
 
 #include "Vk/lve_buffer.hpp"
+#include "Vk/lve_shader.hpp"
 
 #include "EngineCore/camera.hpp"
 #include "EngineCore/keyboard_movement_controller.hpp"
@@ -39,19 +40,6 @@ FirstApp::~FirstApp()
 
 void FirstApp::run()
 {
-    std::vector<std::unique_ptr<Vk::LveBuffer>> uboBuffers(Vk::LveSwapChain::MAX_FRAMES_IN_FLIGHT);
-    for(int i=0; i<uboBuffers.size(); i++)
-    {
-        uboBuffers[i] = std::make_unique<Vk::LveBuffer>(
-            lveDevice,
-            sizeof(EngineCore::GlobalUbo),
-            1,
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-        );
-        uboBuffers[i]->map();
-    }
-
     // ================================= global descriptor ==========================
     // this set layout should be matched with shader reflection
     // used in pipeline creation, telling shader bindings
@@ -79,26 +67,15 @@ void FirstApp::run()
         descriptorSetLayouts
     };
 
-    // we have 2 descritor sets, whose number is equivelent with resources(buffers and textures)
-    std::vector<VkDescriptorSet> globalDescriptorSets(Vk::LveSwapChain::MAX_FRAMES_IN_FLIGHT);
-    for(int i=0; i<globalDescriptorSets.size(); i++)
-    {
-        auto uboInfo = uboBuffers[i]->descriptorInfo();
-        Vk::LveDescriptorWriter(*globalSetLayout, *globalPool)
-            .writeBuffer(0, &uboInfo)
-            .build(globalDescriptorSets[i]);
-    }
+    // temp shader
+    Vk::LveShader lveShader{
+        {globalSetLayout.get(), textureSetLayout.get()}
+    };
 
-    // we have 2 descritor sets, whose number is equivelent with resources(buffers and textures)
-    std::vector<VkDescriptorSet> textureDescriptorSets(Vk::LveSwapChain::MAX_FRAMES_IN_FLIGHT);
-    for(int i=0; i<textureDescriptorSets.size(); i++)
-    {
-        auto textureInfo = tempTexture->getDescriptorImageInfo();
-        Vk::LveDescriptorWriter(*textureSetLayout, *globalPool)
-            .writeImage(0, &textureInfo)
-            .build(textureDescriptorSets[i]);
-    }
+    lveShader.createBufferAndImage(lveDevice, sizeof(EngineCore::GlobalUbo));
+    lveShader.createDescriptorSets(*globalPool, tempTexture->getDescriptorImageInfo());
 
+    //=================================== update camera object .etc =================================
 
     EngineCore::Camera camera{};
     camera.setViewTarget(glm::vec3{-1.f, -2.f, 2.f}, glm::vec3{0.0f, 0.0f, 2.5f});
@@ -130,17 +107,13 @@ void FirstApp::run()
         if(auto commandBuffer = lveRenderer.beginFrame())
         {
             int frameIndex = lveRenderer.getFrameIndex();
-            std::vector<VkDescriptorSet> descriptorSets{
-                globalDescriptorSets[frameIndex],
-                textureDescriptorSets[frameIndex]
-            };
             EngineCore::FrameInfo frameInfo
             {
                 frameIndex,
                 frameTime,
                 commandBuffer,
                 camera,
-                descriptorSets,
+                lveShader,
                 gameObjects
             };
 
@@ -150,8 +123,7 @@ void FirstApp::run()
             ubo.view = camera.getView();
             ubo.inverseView = camera.getInverseView();
             pointLightSystem.update(frameInfo, ubo);
-            uboBuffers[frameIndex]->writeToBuffer(&ubo);
-            uboBuffers[frameIndex]->flush();
+            lveShader.writeToBuffer(&ubo, frameIndex);
 
             // render
             lveRenderer.beginSwapChainRenderPass(commandBuffer);

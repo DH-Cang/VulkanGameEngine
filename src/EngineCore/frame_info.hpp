@@ -3,6 +3,8 @@
 #include "camera.hpp"
 #include "game_object.hpp"
 
+#include "Vk/lve_shader.hpp"
+
 // lib
 #include <vulkan/vulkan.h>
 
@@ -33,7 +35,7 @@ namespace EngineCore
         float frameTime;
         VkCommandBuffer commandBuffer;
         Camera& camera;
-        const std::vector<VkDescriptorSet>& descriptorSets;
+        Vk::LveShader& lveShader;
         EngineCore::GameObject::Map& gameObjects;
     };
 }

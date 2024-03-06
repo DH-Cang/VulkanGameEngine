@@ -116,16 +116,7 @@ namespace EngineSystem
         // render
         lvePipeline->bind(frameInfo.commandBuffer);
 
-        vkCmdBindDescriptorSets(
-            frameInfo.commandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout,
-            0,
-            frameInfo.descriptorSets.size(),
-            frameInfo.descriptorSets.data(),
-            0,
-            nullptr
-        );
+        frameInfo.lveShader.bind(frameInfo.commandBuffer, pipelineLayout, frameInfo.frameIndex);
 
         // iterate through sorted lights in reverse order
         for(auto it = sorted.rbegin(); it != sorted.rend(); it++)
