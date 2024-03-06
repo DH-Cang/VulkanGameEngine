@@ -33,6 +33,8 @@ namespace Vk {
     
         LveDescriptorSetLayout(
             LveDevice &lveDevice, std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings);
+        LveDescriptorSetLayout(
+            LveDevice &device, const VkDescriptorSetLayoutCreateInfo& createInfo);
         ~LveDescriptorSetLayout();
         LveDescriptorSetLayout(const LveDescriptorSetLayout &) = delete;
         LveDescriptorSetLayout &operator=(const LveDescriptorSetLayout &) = delete;

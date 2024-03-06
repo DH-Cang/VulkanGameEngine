@@ -49,7 +49,6 @@ namespace Vk
         static void enableAlphaBlending(PipelineConfigInfo& configInfo);
 
     private:
-        static std::vector<char> readFile(const std::string& filepath);
 
         void createGraphicsPipeline(
             const std::string& vertFilepath, 

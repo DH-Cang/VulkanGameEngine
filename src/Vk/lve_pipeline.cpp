@@ -1,6 +1,8 @@
 #include "lve_pipeline.hpp"
 #include "lve_model.hpp"
 
+#include "ThirdParty/utility.hpp"
+
 #include <fstream>
 #include <iostream>
 #include <cassert>
@@ -23,25 +25,6 @@ namespace Vk {
         vkDestroyPipeline(lveDevice.device(), graphicsPipeline, nullptr);
     }
 
-    std::vector<char> LvePipeline::readFile(const std::string& filepath)
-    {
-        std::ifstream file{filepath, std::ios::ate | std::ios::binary};
-
-        if(!file.is_open())
-        {
-            throw std::runtime_error("failed to open file: " + filepath);
-        }
-
-        size_t fileSize = static_cast<size_t>(file.tellg());
-        std::vector<char> buffer(fileSize);
-
-        file.seekg(0);
-        file.read(buffer.data(), fileSize);
-
-        file.close();
-        return buffer;
-    }
-
     void LvePipeline::createGraphicsPipeline(
         const std::string& vertFilepath, 
         const std::string& fragFilepath,
@@ -51,8 +34,8 @@ namespace Vk {
         "cannot create graphics pipeline:: no pipelineLayout provided in configInfo");
         assert(configInfo.renderPass != VK_NULL_HANDLE &&
         "cannot create graphics pipeline:: no renderPass provided in configInfo");
-        auto vertCode = readFile(vertFilepath);
-        auto fragCode = readFile(fragFilepath);
+        auto vertCode = Util::readFile(vertFilepath);
+        auto fragCode = Util::readFile(fragFilepath);
 
         createShaderModule(vertCode, &vertShaderModule);
         createShaderModule(fragCode, &fragShaderModule);

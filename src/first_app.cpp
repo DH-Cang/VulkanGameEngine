@@ -23,7 +23,6 @@
 FirstApp::FirstApp()
 {
     // descriptor pool
-    // TODO: add a pool manager to automatically create and free descriptor pools
     globalPool = Vk::LveDescriptorPool::Builder(lveDevice)
         .setMaxSets(1000) // can create 2 descriptor sets
         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000) // have 2 uniform buffer descriptor in total
@@ -40,21 +39,16 @@ FirstApp::~FirstApp()
 
 void FirstApp::run()
 {
-    // ================================= global descriptor ==========================
-    // this set layout should be matched with shader reflection
-    // used in pipeline creation, telling shader bindings
-    auto globalSetLayout = Vk::LveDescriptorSetLayout::Builder(lveDevice)
-        .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT) // we want one uniform buffer at the binding 0 of vertex shader and frag shader
-        .build();
-
-    // ===================================== texture descriptor =====================================
-    auto textureSetLayout = Vk::LveDescriptorSetLayout::Builder(lveDevice)
-        .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-        .build();
+    // temp shader
+    Vk::LveShader lveShader{
+        lveDevice, 
+        "./build/ShaderBin/simple_shader.vert.spv", 
+        "./build/ShaderBin/simple_shader.frag.spv", 
+    };
 
     std::vector<VkDescriptorSetLayout> descriptorSetLayouts{
-        globalSetLayout->getDescriptorSetLayout(), 
-        textureSetLayout->getDescriptorSetLayout()
+        lveShader.getDescriptorSetLayout(0),
+        lveShader.getDescriptorSetLayout(1),
     };
     EngineSystem::SimpleRenderSystem simpleRenderSystem{
         lveDevice, 
@@ -65,11 +59,6 @@ void FirstApp::run()
         lveDevice, 
         lveRenderer.getSwapChainRenderPass(), 
         descriptorSetLayouts
-    };
-
-    // temp shader
-    Vk::LveShader lveShader{
-        {globalSetLayout.get(), textureSetLayout.get()}
     };
 
     lveShader.createBufferAndImage(lveDevice, sizeof(EngineCore::GlobalUbo));

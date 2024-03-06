@@ -50,6 +50,24 @@ namespace Vk {
             throw std::runtime_error("failed to create descriptor set layout!");
         }
     }
+
+    LveDescriptorSetLayout::LveDescriptorSetLayout(
+            LveDevice& device, const VkDescriptorSetLayoutCreateInfo& createInfo):
+            lveDevice(device)
+        {
+            for(int i=0; i<createInfo.bindingCount; i++)
+            {
+                bindings[i] = createInfo.pBindings[i];
+            }
+
+            if (vkCreateDescriptorSetLayout(
+                lveDevice.device(),
+                &createInfo,
+                nullptr,
+                &descriptorSetLayout) != VK_SUCCESS) {
+                    throw std::runtime_error("failed to create descriptor set layout!");
+                }
+        }
     
     LveDescriptorSetLayout::~LveDescriptorSetLayout() {
         vkDestroyDescriptorSetLayout(lveDevice.device(), descriptorSetLayout, nullptr);

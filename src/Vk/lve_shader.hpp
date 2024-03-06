@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vulkan/vulkan.h>
 #include "lve_buffer.hpp"
 #include "lve_descriptors.hpp"
 
@@ -13,10 +14,12 @@ namespace Vk
     class LveShader
     {
     public:
-        LveShader(std::vector<LveDescriptorSetLayout*> descriptorSetLayouts);
+        LveShader(LveDevice& device, const std::string& vertShaderPath, const std::string& fragShaderPath);
         ~LveShader() = default;
         LveShader(const LveShader&) = delete;
         LveShader& operator=(const LveShader&) = delete;
+
+        VkDescriptorSetLayout getDescriptorSetLayout(int setIndex) const { return descriptorSetLayouts[setIndex]->getDescriptorSetLayout(); }
 
         // create fixed buffer and image for now
         void createBufferAndImage(LveDevice& device, VkDeviceSize size);
@@ -34,7 +37,7 @@ namespace Vk
         // temp
         // descriptor set layout [0]: per frame set
         // descriptor set layout [1]: per object set
-        std::vector<LveDescriptorSetLayout*> descriptorSetLayouts;
+        std::vector<std::unique_ptr<LveDescriptorSetLayout>> descriptorSetLayouts;
 
         std::vector<std::unique_ptr<LveBuffer>> rarelyChangeUniformBuffers; // size == frame buffer num
         std::vector<std::unique_ptr<LveBuffer>> perFrameUniformBuffers;
@@ -43,5 +46,17 @@ namespace Vk
         std::vector<VkDescriptorSet> rarelyChangeDescriptorSets; // size == frame buffer num | set 0
         std::vector<VkDescriptorSet> perFrameDescriptorSets; // size == frame buffer num | set 1
         std::vector<VkDescriptorSet> perObjectDescriptorSets; // size == frame buffer num | set 2
+
+    private:
+
+        struct DescriptorSetLayoutData
+        {
+            uint32_t set_number;
+            VkDescriptorSetLayoutCreateInfo create_info;
+            std::vector<VkDescriptorSetLayoutBinding> bindings;
+        };
+
+        void ShaderReflection(const std::string& shaderFilePath, std::vector<DescriptorSetLayoutData>& outReflectionData);
+
     };
 }
