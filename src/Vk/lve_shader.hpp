@@ -4,9 +4,12 @@
 #include "lve_buffer.hpp"
 #include "lve_descriptors.hpp"
 
+#include "ThirdParty/spirv_reflect.h"
+
 // std
 #include <vector>
 #include <memory>
+#include <unordered_map>
 
 namespace Vk
 {
@@ -14,38 +17,17 @@ namespace Vk
     class LveShader
     {
     public:
-        LveShader(LveDevice& device, const std::string& vertShaderPath, const std::string& fragShaderPath);
-        ~LveShader() = default;
+        LveShader(LveDevice& device, LveDescriptorPool& descriptorPool, const std::string& vertShaderPath, const std::string& fragShaderPath);
+        ~LveShader(){ spvReflectDestroyShaderModule(&module); }
         LveShader(const LveShader&) = delete;
         LveShader& operator=(const LveShader&) = delete;
 
         VkDescriptorSetLayout getDescriptorSetLayout(int setIndex) const { return descriptorSetLayouts[setIndex]->getDescriptorSetLayout(); }
 
-        // create fixed buffer and image for now
-        void createBufferAndImage(LveDevice& device, VkDeviceSize size);
-        void writeToBuffer(void* data, int frameIndex) { perFrameUniformBuffers[frameIndex]->writeToBuffer(data); }
-
-        // allocate descriptor sets from pool
-        // populate descriptor sets with buffer info // temp texture info to be deleted
-        void createDescriptorSets(LveDescriptorPool& descriptorPool, VkDescriptorImageInfo temp_texture_info);
-
-        // load data to actual memory in gpu
-        // bind descriptor sets to render pipeline // temp: set id
-        void bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, int frameIndex);
-
-    public:
-        // temp
-        // descriptor set layout [0]: per frame set
-        // descriptor set layout [1]: per object set
-        std::vector<std::unique_ptr<LveDescriptorSetLayout>> descriptorSetLayouts;
-
-        std::vector<std::unique_ptr<LveBuffer>> rarelyChangeUniformBuffers; // size == frame buffer num
-        std::vector<std::unique_ptr<LveBuffer>> perFrameUniformBuffers;
-        std::vector<std::unique_ptr<LveBuffer>> perObjectUniformBuffers;
-
-        std::vector<VkDescriptorSet> rarelyChangeDescriptorSets; // size == frame buffer num | set 0
-        std::vector<VkDescriptorSet> perFrameDescriptorSets; // size == frame buffer num | set 1
-        std::vector<VkDescriptorSet> perObjectDescriptorSets; // size == frame buffer num | set 2
+        void WriteDescriptor(const std::string& name, VkDescriptorBufferInfo bufferInfo);
+        void WriteDescriptor(const std::string& name, VkDescriptorImageInfo imageInfo);
+        void FinishWriteDescriptor();
+        void Bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout);
 
     private:
 
@@ -55,6 +37,23 @@ namespace Vk
             VkDescriptorSetLayoutCreateInfo create_info;
             std::vector<VkDescriptorSetLayoutBinding> bindings;
         };
+
+        struct SetAndBinding
+        {
+            uint32_t setId;
+            uint32_t bindingId;
+        };
+
+        SpvReflectShaderModule module = {};
+        std::vector<SpvReflectDescriptorSet*> reflectDescriptorSets;
+
+
+        std::unordered_map<std::string, SetAndBinding> descriptorSignature;
+        std::vector<std::shared_ptr<LveDescriptorWriter>> descriptorWriters;
+        std::vector<VkDescriptorSet> descriptorSets;
+        std::vector<std::unique_ptr<LveDescriptorSetLayout>> descriptorSetLayouts;
+
+        LveDescriptorPool& lveDescriptorPool;
 
         void ShaderReflection(const std::string& shaderFilePath, std::vector<DescriptorSetLayoutData>& outReflectionData);
 

@@ -70,7 +70,7 @@ namespace EngineSystem
         // render
         lvePipeline->bind(frameInfo.commandBuffer);
 
-        frameInfo.lveShader.bind(frameInfo.commandBuffer, pipelineLayout, frameInfo.frameIndex);
+        frameInfo.lveShader.Bind(frameInfo.commandBuffer, pipelineLayout);
 
         for(auto& kv : frameInfo.gameObjects)
         {

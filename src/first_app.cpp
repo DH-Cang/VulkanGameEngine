@@ -39,9 +39,22 @@ FirstApp::~FirstApp()
 
 void FirstApp::run()
 {
+    // create ubo
+    std::unique_ptr<Vk::LveBuffer> globalUbo;
+    globalUbo = std::make_unique<Vk::LveBuffer>(
+        lveDevice,
+        sizeof(EngineCore::GlobalUbo),
+        1,
+        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    );
+    globalUbo->map();
+
+
     // temp shader
     Vk::LveShader lveShader{
         lveDevice, 
+        *globalPool,
         "./build/ShaderBin/simple_shader.vert.spv", 
         "./build/ShaderBin/simple_shader.frag.spv", 
     };
@@ -61,8 +74,9 @@ void FirstApp::run()
         descriptorSetLayouts
     };
 
-    lveShader.createBufferAndImage(lveDevice, sizeof(EngineCore::GlobalUbo));
-    lveShader.createDescriptorSets(*globalPool, tempTexture->getDescriptorImageInfo());
+    lveShader.WriteDescriptor("ubo", globalUbo->descriptorInfo());
+    lveShader.WriteDescriptor("texSampler", tempTexture->getDescriptorImageInfo());
+    lveShader.FinishWriteDescriptor();
 
     //=================================== update camera object .etc =================================
 
@@ -112,7 +126,7 @@ void FirstApp::run()
             ubo.view = camera.getView();
             ubo.inverseView = camera.getInverseView();
             pointLightSystem.update(frameInfo, ubo);
-            lveShader.writeToBuffer(&ubo, frameIndex);
+            globalUbo->writeToBuffer(&ubo);
 
             // render
             lveRenderer.beginSwapChainRenderPass(commandBuffer);

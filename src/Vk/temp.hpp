@@ -39,7 +39,7 @@ std::string ToStringDescriptorType(SpvReflectDescriptorType value) {
 }
 
 
-    void PrintDescriptorBinding(std::ostream& os, const SpvReflectDescriptorBinding& obj, bool write_set, const char* indent) {
+void PrintDescriptorBinding(std::ostream& os, const SpvReflectDescriptorBinding& obj, bool write_set, const char* indent) {
   const char* t = indent;
   os << t << "binding : " << obj.binding << "\n";
   if (write_set) {
@@ -74,7 +74,7 @@ std::string ToStringDescriptorType(SpvReflectDescriptorType value) {
   }
 }
 
-    void PrintModuleInfo(std::ostream& os, const SpvReflectShaderModule& obj) {
+void PrintModuleInfo(std::ostream& os, const SpvReflectShaderModule& obj) {
         os << "entry point     : " << obj.entry_point_name << "\n";
         os << "source lang     : " << spvReflectSourceLanguage(obj.source_language) << "\n";
         os << "source lang ver : " << obj.source_language_version << "\n";
@@ -103,9 +103,9 @@ std::string ToStringDescriptorType(SpvReflectDescriptorType value) {
                 break;
             }
         }
-        }
+}
 
-        void PrintDescriptorSet(std::ostream& os, const SpvReflectDescriptorSet& obj, const char* indent) {
+void PrintDescriptorSet(std::ostream& os, const SpvReflectDescriptorSet& obj, const char* indent) {
         const char* t = indent;
         std::string tt = std::string(indent) + "  ";
         std::string ttttt = std::string(indent) + "    ";
@@ -122,4 +122,34 @@ std::string ToStringDescriptorType(SpvReflectDescriptorType value) {
             os << "\n";
             }
         }
-        }
+}
+
+void PrintReflectionInfo(const SpvReflectShaderModule& module, const std::vector<SpvReflectDescriptorSet*>& reflectDescriptorSets)
+{
+  SpvReflectResult result;
+
+  // Log the descriptor set contents to stdout
+  const char* t = "  ";
+  const char* tt = "    ";
+
+  PrintModuleInfo(std::cout, module);
+  std::cout << "\n\n";
+
+  std::cout << "Descriptor sets:"
+              << "\n";
+  for (size_t index = 0; index < reflectDescriptorSets.size(); ++index) {
+      auto p_set = reflectDescriptorSets[index];
+
+      // descriptor sets can also be retrieved directly from the module, by set
+      // index
+      auto p_set2 = spvReflectGetDescriptorSet(&module, p_set->set, &result);
+      assert(result == SPV_REFLECT_RESULT_SUCCESS);
+      assert(p_set == p_set2);
+      (void)p_set2;
+
+      std::cout << t << index << ":"
+              << "\n";
+      PrintDescriptorSet(std::cout, *p_set, tt);
+      std::cout << "\n\n";
+  }
+}

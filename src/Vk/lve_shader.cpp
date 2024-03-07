@@ -1,5 +1,5 @@
 #include "lve_shader.hpp"
-#include "ThirdParty/spirv_reflect.h"
+
 #include "ThirdParty/utility.hpp"
 
 // std
@@ -14,11 +14,13 @@ namespace Vk
 {
     
 
-    LveShader::LveShader(LveDevice& device, const std::string& vertShaderPath, const std::string& fragShaderPath)
+    LveShader::LveShader(LveDevice& device, LveDescriptorPool& descriptorPool, const std::string& vertShaderPath, const std::string& fragShaderPath):
+        lveDescriptorPool(descriptorPool)
     {
         std::vector<DescriptorSetLayoutData> reflectionData;
         ShaderReflection(fragShaderPath, reflectionData); // TODO: only check frag shader
 
+        descriptorWriters.resize(reflectionData.size(), nullptr);
         descriptorSetLayouts.resize(reflectionData.size());
         // for each descriptor layout
         for(int i=0; i<reflectionData.size(); i++)
@@ -35,7 +37,6 @@ namespace Vk
         // reflection
         auto shaderCode = Util::readFile(shaderFilePath);
 
-        SpvReflectShaderModule module = {};
         SpvReflectResult result = spvReflectCreateShaderModule(shaderCode.size(), shaderCode.data(), &module);
         assert(result == SPV_REFLECT_RESULT_SUCCESS);
 
@@ -43,15 +44,15 @@ namespace Vk
         result = spvReflectEnumerateDescriptorSets(&module, &count, NULL);
         assert(result == SPV_REFLECT_RESULT_SUCCESS);
 
-        std::vector<SpvReflectDescriptorSet*> sets(count);
-        result = spvReflectEnumerateDescriptorSets(&module, &count, sets.data());
+        reflectDescriptorSets.resize(count);
+        result = spvReflectEnumerateDescriptorSets(&module, &count, reflectDescriptorSets.data());
         assert(result == SPV_REFLECT_RESULT_SUCCESS);
 
         // Demonstrates how to generate all necessary data structures to create a
         // VkDescriptorSetLayout for each descriptor set in this shader.
         outReflectionData.resize(count);
-        for (size_t i_set = 0; i_set < sets.size(); ++i_set) {
-            const SpvReflectDescriptorSet& refl_set = *(sets[i_set]);
+        for (size_t i_set = 0; i_set < reflectDescriptorSets.size(); ++i_set) {
+            const SpvReflectDescriptorSet& refl_set = *(reflectDescriptorSets[i_set]);
             DescriptorSetLayoutData& layout = outReflectionData[i_set];
             layout.bindings.resize(refl_set.binding_count);
             for (uint32_t i_binding = 0; i_binding < refl_set.binding_count; ++i_binding) {
@@ -77,97 +78,85 @@ namespace Vk
         // application they would be merged with similar structures from other shader
         // stages and/or pipelines to create a VkPipelineLayout.
 
-        // Log the descriptor set contents to stdout
-        const char* t = "  ";
-        const char* tt = "    ";
+        PrintReflectionInfo(module, reflectDescriptorSets);
 
-        PrintModuleInfo(std::cout, module);
-        std::cout << "\n\n";
-
-        std::cout << "Descriptor sets:"
-                    << "\n";
-        for (size_t index = 0; index < sets.size(); ++index) {
-            auto p_set = sets[index];
-
-            // descriptor sets can also be retrieved directly from the module, by set
-            // index
-            auto p_set2 = spvReflectGetDescriptorSet(&module, p_set->set, &result);
-            assert(result == SPV_REFLECT_RESULT_SUCCESS);
-            assert(p_set == p_set2);
-            (void)p_set2;
-
-            std::cout << t << index << ":"
-                    << "\n";
-            PrintDescriptorSet(std::cout, *p_set, tt);
-            std::cout << "\n\n";
+        // for each set
+        for(size_t setId = 0; setId < reflectDescriptorSets.size(); setId++)
+        {
+            const SpvReflectDescriptorSet& refl_set = *(reflectDescriptorSets[setId]);
+            // for each binding
+            for (uint32_t bindingId = 0; bindingId < refl_set.binding_count; ++bindingId)
+            {
+                // record set id and bindingid
+                const SpvReflectDescriptorBinding& refl_binding = *(refl_set.bindings[bindingId]);
+                std::string name{refl_binding.name};
+                SetAndBinding setAndBinding{
+                    static_cast<uint32_t>(setId),
+                    refl_binding.binding
+                };
+                assert(descriptorSignature.find(name) == descriptorSignature.end());
+                descriptorSignature[name] = setAndBinding;
+            }
         }
 
-        spvReflectDestroyShaderModule(&module);
+        // temp
+        for(auto& iter : descriptorSignature )
+        {
+            printf("%s, set %d, binding %d\n", iter.first.c_str(), iter.second.setId, iter.second.bindingId);
+        }
     }
 
-    void LveShader::createBufferAndImage(LveDevice& device, VkDeviceSize size)
+
+    void LveShader::WriteDescriptor(const std::string& name, VkDescriptorBufferInfo bufferInfo)
     {
-        perFrameUniformBuffers.resize(Vk::LveSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for(int i=0; i<perFrameUniformBuffers.size(); i++)
+        const auto& descriptorRecord = descriptorSignature.find(name);
+        assert(descriptorRecord != descriptorSignature.end());
+        auto setId = descriptorRecord->second.setId;
+        auto bindingId = descriptorRecord->second.bindingId;
+
+        if(descriptorWriters[setId] == nullptr)
         {
-            perFrameUniformBuffers[i] = std::make_unique<Vk::LveBuffer>(
-                device,
-                size,
-                1,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-            );
-            perFrameUniformBuffers[i]->map();
+            descriptorWriters[setId] = std::make_shared<LveDescriptorWriter>(*descriptorSetLayouts[setId], lveDescriptorPool);
         }
+        descriptorWriters[setId]->writeBuffer(bindingId, &bufferInfo);
     }
 
-    void LveShader::createDescriptorSets(LveDescriptorPool& descriptorPool, VkDescriptorImageInfo temp_texture_info)
+    void LveShader::WriteDescriptor(const std::string& name, VkDescriptorImageInfo imageInfo)
     {
-        // allocate and write per frame descriptor set
-        perFrameDescriptorSets.resize(Vk::LveSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for(int i=0; i<perFrameDescriptorSets.size(); i++)
-        {
-            auto perFrameBufferInfo = perFrameUniformBuffers[i]->descriptorInfo();
-            LveDescriptorWriter(*descriptorSetLayouts[0], descriptorPool)
-                .writeBuffer(0, &perFrameBufferInfo)
-                .build(perFrameDescriptorSets[i]);
-        }
+        const auto& descriptorRecord = descriptorSignature.find(name);
+        assert(descriptorRecord != descriptorSignature.end());
+        auto setId = descriptorRecord->second.setId;
+        auto bindingId = descriptorRecord->second.bindingId;
 
-        // allocate and write per object descriptor set
-        perObjectDescriptorSets.resize(Vk::LveSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for(int i=0; i<perObjectDescriptorSets.size(); i++)
+        if(descriptorWriters[setId] == nullptr)
         {
-            //auto perObjectBufferInfo = perObjectUniformBuffers[i]->descriptorInfo();
-            LveDescriptorWriter(*descriptorSetLayouts[1], descriptorPool)
-                .writeImage(0, &temp_texture_info)
-                .build(perObjectDescriptorSets[i]);
+            descriptorWriters[setId] = std::make_shared<LveDescriptorWriter>(*descriptorSetLayouts[setId], lveDescriptorPool);
+        }
+        descriptorWriters[setId]->writeImage(bindingId, &imageInfo);
+    }
+
+    void LveShader::FinishWriteDescriptor()
+    {
+        assert(descriptorWriters.size() == descriptorSetLayouts.size());
+        descriptorSets.resize(descriptorWriters.size());
+        for(int i=0; i<descriptorWriters.size(); i++)
+        {
+            descriptorWriters[i]->build(descriptorSets[i]);
         }
     }
 
-    void LveShader::bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, int frameIndex)
+    void LveShader::Bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout)
     {
         vkCmdBindDescriptorSets(
             commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             pipelineLayout,
             0,
-            1,
-            &perFrameDescriptorSets[frameIndex],
-            0,
-            nullptr
-        );
-
-        vkCmdBindDescriptorSets(
-            commandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout,
-            1,
-            1,
-            &perObjectDescriptorSets[frameIndex],
+            descriptorSets.size(),
+            descriptorSets.data(),
             0,
             nullptr
         );
     }
 
-    
 }

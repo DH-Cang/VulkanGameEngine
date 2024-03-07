@@ -116,7 +116,7 @@ namespace EngineSystem
         // render
         lvePipeline->bind(frameInfo.commandBuffer);
 
-        frameInfo.lveShader.bind(frameInfo.commandBuffer, pipelineLayout, frameInfo.frameIndex);
+        frameInfo.lveShader.Bind(frameInfo.commandBuffer, pipelineLayout);
 
         // iterate through sorted lights in reverse order
         for(auto it = sorted.rbegin(); it != sorted.rend(); it++)
