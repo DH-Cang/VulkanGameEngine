@@ -18,10 +18,14 @@ namespace EngineSystem
         //alignas(16) glm::vec3 color; // make sure the memory align as 16 bytes, to match the data alignment in shader
     };
 
-    SimpleRenderSystem::SimpleRenderSystem(Vk::LveDevice& device, VkRenderPass renderPass, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts):
+    SimpleRenderSystem::SimpleRenderSystem(Vk::LveDevice& device, VkRenderPass renderPass):
         lveDevice{device}
     {
-        createPipelineLayout(descriptorSetLayouts);
+        vertShader = createShader("./build/ShaderBin/simple_shader.vert.spv");
+        fragShader = createShader("./build/ShaderBin/simple_shader.frag.spv");
+        descriptorWriters.resize(descriptorSetLayouts.size());
+
+        createPipelineLayout();
         createPipeline(renderPass);
     }
 
@@ -30,8 +34,19 @@ namespace EngineSystem
         vkDestroyPipelineLayout(lveDevice.device(), pipelineLayout, nullptr);
     }
 
-    void SimpleRenderSystem::createPipelineLayout(const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts)
+    std::unique_ptr<Vk::LveShader> SimpleRenderSystem::createShader(const std::string& shaderFilePath)
     {
+        return std::make_unique<Vk::LveShader>(lveDevice, descriptorSignature, descriptorSetLayouts, shaderFilePath);
+    }
+
+    void SimpleRenderSystem::createPipelineLayout()
+    {
+        std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts(descriptorSetLayouts.size());
+        for(int i=0; i<vkDescriptorSetLayouts.size(); i++)
+        {
+            vkDescriptorSetLayouts[i] = descriptorSetLayouts[i]->getDescriptorSetLayout();
+        }
+
         VkPushConstantRange pushConstantRange{};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstantRange.offset = 0;
@@ -39,8 +54,8 @@ namespace EngineSystem
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
-        pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
+        pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(vkDescriptorSetLayouts.size());
+        pipelineLayoutInfo.pSetLayouts = vkDescriptorSetLayouts.data();
         pipelineLayoutInfo.pushConstantRangeCount = 1;
         pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
         if(vkCreatePipelineLayout(lveDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
@@ -59,8 +74,8 @@ namespace EngineSystem
         pipelineConfig.pipelineLayout = pipelineLayout;
         lvePipeline = std::make_unique<Vk::LvePipeline>(
             lveDevice, 
-            "./build/ShaderBin/simple_shader.vert.spv", 
-            "./build/ShaderBin/simple_shader.frag.spv", 
+            *vertShader, 
+            *fragShader, 
             pipelineConfig
         );
     }
@@ -70,7 +85,7 @@ namespace EngineSystem
         // render
         lvePipeline->bind(frameInfo.commandBuffer);
 
-        frameInfo.lveShader.Bind(frameInfo.commandBuffer, pipelineLayout);
+        bindDescriptorSets(frameInfo.commandBuffer, pipelineLayout);
 
         for(auto& kv : frameInfo.gameObjects)
         {
@@ -92,5 +107,62 @@ namespace EngineSystem
             obj.model->bindAndDraw(frameInfo.commandBuffer);
         }
     }
+
+    void SimpleRenderSystem::writeDescriptorToSets(const std::string& name, VkDescriptorBufferInfo bufferInfo, Vk::LveDescriptorPool& descriptorPool)
+    {
+        const auto& descriptorRecord = descriptorSignature.find(name);
+        assert(descriptorRecord != descriptorSignature.end());
+        auto setId = descriptorRecord->second.setId;
+        auto bindingId = descriptorRecord->second.bindingId;
+
+        assert(descriptorWriters.size() == descriptorSetLayouts.size());
+        if(descriptorWriters[setId] == nullptr)
+        {
+            descriptorWriters[setId] = std::make_shared<Vk::LveDescriptorWriter>(*descriptorSetLayouts[setId], descriptorPool);
+        }
+        descriptorWriters[setId]->writeBuffer(bindingId, &bufferInfo);
+    }
+
+    void SimpleRenderSystem::writeDescriptorToSets(const std::string& name, VkDescriptorImageInfo imageInfo, Vk::LveDescriptorPool& descriptorPool)
+    {
+        const auto& descriptorRecord = descriptorSignature.find(name);
+        assert(descriptorRecord != descriptorSignature.end());
+        auto setId = descriptorRecord->second.setId;
+        auto bindingId = descriptorRecord->second.bindingId;
+
+        assert(descriptorWriters.size() == descriptorSetLayouts.size());
+        if(descriptorWriters[setId] == nullptr)
+        {
+            descriptorWriters[setId] = std::make_shared<Vk::LveDescriptorWriter>(*descriptorSetLayouts[setId], descriptorPool);
+        }
+        descriptorWriters[setId]->writeImage(bindingId, &imageInfo);
+    }
+
+    void SimpleRenderSystem::finishWriteDescriptor()
+    {
+        assert(descriptorSetLayouts.size() != 0);
+        assert(descriptorWriters.size() == descriptorSetLayouts.size());
+        descriptorSets.resize(descriptorWriters.size());
+        for(int i=0; i<descriptorWriters.size(); i++)
+        {
+            assert(descriptorWriters[i] != nullptr);
+            descriptorWriters[i]->build(descriptorSets[i]);
+        }
+    }
+
+    void SimpleRenderSystem::bindDescriptorSets(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout)
+    {
+        vkCmdBindDescriptorSets(
+            commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout,
+            0,
+            descriptorSets.size(),
+            descriptorSets.data(),
+            0,
+            nullptr
+        );
+    }
+
 
 };

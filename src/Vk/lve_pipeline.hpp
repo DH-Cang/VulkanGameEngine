@@ -1,6 +1,7 @@
 #pragma once 
 
 #include "lve_device.hpp"
+#include "lve_shader.hpp"
 
 #include <string>
 #include <vector>
@@ -34,8 +35,8 @@ namespace Vk
     public:
         LvePipeline(
             LveDevice& device, 
-            const std::string& vertFilepath, 
-            const std::string& fragFilepath, 
+            const LveShader& vertShader, 
+            const LveShader& fragShader, 
             const PipelineConfigInfo& configInfo);
 
         ~LvePipeline();
@@ -48,19 +49,19 @@ namespace Vk
         static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
         static void enableAlphaBlending(PipelineConfigInfo& configInfo);
 
+        
+
     private:
 
         void createGraphicsPipeline(
-            const std::string& vertFilepath, 
-            const std::string& fragFilepath,
+            const LveShader& vertShader, 
+            const LveShader& fragShader, 
             const PipelineConfigInfo& configInfo);
-
-        void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule);
 
         LveDevice& lveDevice;
         VkPipeline graphicsPipeline;
-        VkShaderModule vertShaderModule;
-        VkShaderModule fragShaderModule;
+
+        
     };
 
 }

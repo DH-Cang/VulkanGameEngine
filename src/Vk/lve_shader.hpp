@@ -4,7 +4,7 @@
 #include "lve_buffer.hpp"
 #include "lve_descriptors.hpp"
 
-#include "ThirdParty/spirv_reflect.h"
+#include "ThirdParty/SpirvReflection/spirv_reflect.h"
 
 // std
 #include <vector>
@@ -17,20 +17,27 @@ namespace Vk
     class LveShader
     {
     public:
-        LveShader(LveDevice& device, LveDescriptorPool& descriptorPool, const std::string& vertShaderPath, const std::string& fragShaderPath);
-        ~LveShader(){ spvReflectDestroyShaderModule(&module); }
+        struct SetAndBinding
+        {
+            uint32_t setId;
+            uint32_t bindingId;
+        };
+
+        LveShader(
+            LveDevice& device, 
+            std::unordered_map<std::string, SetAndBinding>& descriptorSignature, 
+            std::vector<std::unique_ptr<LveDescriptorSetLayout>>& descriptorSetLayouts, 
+            const std::string& fragShaderPath);
+
+        ~LveShader();
         LveShader(const LveShader&) = delete;
         LveShader& operator=(const LveShader&) = delete;
 
         VkDescriptorSetLayout getDescriptorSetLayout(int setIndex) const { return descriptorSetLayouts[setIndex]->getDescriptorSetLayout(); }
 
-        void WriteDescriptor(const std::string& name, VkDescriptorBufferInfo bufferInfo);
-        void WriteDescriptor(const std::string& name, VkDescriptorImageInfo imageInfo);
-        void FinishWriteDescriptor();
-        void Bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout);
+        VkShaderModule getShaderModule() const { return shaderModule; }
 
     private:
-
         struct DescriptorSetLayoutData
         {
             uint32_t set_number;
@@ -38,24 +45,21 @@ namespace Vk
             std::vector<VkDescriptorSetLayoutBinding> bindings;
         };
 
-        struct SetAndBinding
-        {
-            uint32_t setId;
-            uint32_t bindingId;
-        };
+        LveDevice& lveDevice;
+        std::unordered_map<std::string, SetAndBinding>& descriptorSignature;
+        std::vector<std::unique_ptr<LveDescriptorSetLayout>>& descriptorSetLayouts;
 
         SpvReflectShaderModule module = {};
         std::vector<SpvReflectDescriptorSet*> reflectDescriptorSets;
 
+        
 
-        std::unordered_map<std::string, SetAndBinding> descriptorSignature;
-        std::vector<std::shared_ptr<LveDescriptorWriter>> descriptorWriters;
-        std::vector<VkDescriptorSet> descriptorSets;
-        std::vector<std::unique_ptr<LveDescriptorSetLayout>> descriptorSetLayouts;
 
-        LveDescriptorPool& lveDescriptorPool;
+        void ShaderReflection(const std::vector<char>& shaderCode, std::vector<DescriptorSetLayoutData>& outReflectionData);
 
-        void ShaderReflection(const std::string& shaderFilePath, std::vector<DescriptorSetLayoutData>& outReflectionData);
+        void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule);
 
+        VkShaderModule shaderModule;
+        
     };
 }

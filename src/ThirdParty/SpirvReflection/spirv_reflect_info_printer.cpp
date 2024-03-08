@@ -1,11 +1,13 @@
+#include "spirv_reflect_info_printer.hpp"
+
+
 #pragma once
 
 #include <cassert>
 #include <iostream>
 #include <vulkan/vulkan.h>
-#include <fstream>
 
-#include "ThirdParty/spirv_reflect.h"
+#include "spirv_reflect.h"
 
 std::string ToStringDescriptorType(SpvReflectDescriptorType value) {
   switch (value) {
@@ -153,3 +155,4 @@ void PrintReflectionInfo(const SpvReflectShaderModule& module, const std::vector
       std::cout << "\n\n";
   }
 }
+

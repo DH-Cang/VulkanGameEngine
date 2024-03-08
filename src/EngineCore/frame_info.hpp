@@ -35,7 +35,6 @@ namespace EngineCore
         float frameTime;
         VkCommandBuffer commandBuffer;
         Camera& camera;
-        Vk::LveShader& lveShader;
         EngineCore::GameObject::Map& gameObjects;
     };
 }

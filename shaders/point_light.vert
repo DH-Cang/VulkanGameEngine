@@ -26,9 +26,9 @@ layout(set = 0, binding = 0) uniform GlobalUbo
     vec4 ambientLightColor; // w is intensity
     PointLight PointLights[10];
     int numLights;
-} ubo;
+} uboVert;
 
-layout(set = 1, binding = 0) uniform sampler2D texSampler;
+layout(set = 0, binding = 1) uniform sampler2D texSamplerVert;
 
 layout(push_constant) uniform Push
 {
@@ -40,12 +40,12 @@ layout(push_constant) uniform Push
 void main()
 {
     fragOffset = OFFSETS[gl_VertexIndex];
-    vec3 cameraRightWorld = {ubo.viewMatrix[0][0], ubo.viewMatrix[1][0], ubo.viewMatrix[2][0]};
-    vec3 cameraUpWorld = {ubo.viewMatrix[0][1], ubo.viewMatrix[1][1], ubo.viewMatrix[2][1]};
+    vec3 cameraRightWorld = {uboVert.viewMatrix[0][0], uboVert.viewMatrix[1][0], uboVert.viewMatrix[2][0]};
+    vec3 cameraUpWorld = {uboVert.viewMatrix[0][1], uboVert.viewMatrix[1][1], uboVert.viewMatrix[2][1]};
 
     vec3 positionWorld = push.position.xyz
         + push.radius * fragOffset.x * cameraRightWorld
         + push.radius * fragOffset.y * cameraUpWorld;
 
-    gl_Position = ubo.projectionMatrix * ubo.viewMatrix * vec4(positionWorld, 1.0f);
+    gl_Position = uboVert.projectionMatrix * uboVert.viewMatrix * vec4(positionWorld, 1.0f);
 }

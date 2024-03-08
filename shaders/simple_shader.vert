@@ -27,9 +27,9 @@ layout(set = 0, binding = 0) uniform GlobalUbo
     vec4 ambientLightColor; // w is intensity
     PointLight PointLights[10];
     int numLights;
-} ubo;
+} uboVert;
 
-layout(set = 1, binding = 0) uniform sampler2D texSampler;
+layout(set = 0, binding = 1) uniform sampler2D texSamplerVert;
 
 // constant
 layout(push_constant) uniform Push
@@ -41,7 +41,7 @@ layout(push_constant) uniform Push
 void main()
 {
     vec4 positionWorld = push.modelMatrix * vec4(position, 1.0f); // position is a column vector
-    gl_Position = ubo.projectionMatrix * ubo.viewMatrix * positionWorld;
+    gl_Position = uboVert.projectionMatrix * uboVert.viewMatrix * positionWorld;
     fragNormalWorld = normalize(mat3(push.normalMatrix) * normal);
     fragPosWorld = positionWorld.xyz;
     fragColor = color;

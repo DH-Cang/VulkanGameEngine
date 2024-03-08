@@ -1,7 +1,6 @@
 #include "first_app.hpp"
 
 #include "Vk/lve_buffer.hpp"
-#include "Vk/lve_shader.hpp"
 
 #include "EngineCore/camera.hpp"
 #include "EngineCore/keyboard_movement_controller.hpp"
@@ -50,33 +49,26 @@ void FirstApp::run()
     );
     globalUbo->map();
 
-
-    // temp shader
-    Vk::LveShader lveShader{
-        lveDevice, 
-        *globalPool,
-        "./build/ShaderBin/simple_shader.vert.spv", 
-        "./build/ShaderBin/simple_shader.frag.spv", 
-    };
-
-    std::vector<VkDescriptorSetLayout> descriptorSetLayouts{
-        lveShader.getDescriptorSetLayout(0),
-        lveShader.getDescriptorSetLayout(1),
-    };
     EngineSystem::SimpleRenderSystem simpleRenderSystem{
         lveDevice, 
-        lveRenderer.getSwapChainRenderPass(), 
-        descriptorSetLayouts
+        lveRenderer.getSwapChainRenderPass()
     };
     EngineSystem::PointLightSystem pointLightSystem{
         lveDevice, 
-        lveRenderer.getSwapChainRenderPass(), 
-        descriptorSetLayouts
+        lveRenderer.getSwapChainRenderPass()
     };
 
-    lveShader.WriteDescriptor("ubo", globalUbo->descriptorInfo());
-    lveShader.WriteDescriptor("texSampler", tempTexture->getDescriptorImageInfo());
-    lveShader.FinishWriteDescriptor();
+    simpleRenderSystem.writeDescriptorToSets("ubo", globalUbo->descriptorInfo(), *globalPool);
+    simpleRenderSystem.writeDescriptorToSets("texSampler", tempTexture->getDescriptorImageInfo(), *globalPool);
+    simpleRenderSystem.writeDescriptorToSets("uboVert", globalUbo->descriptorInfo(), *globalPool);
+    simpleRenderSystem.writeDescriptorToSets("texSamplerVert", tempTexture->getDescriptorImageInfo(), *globalPool);
+    simpleRenderSystem.finishWriteDescriptor();
+
+    pointLightSystem.writeDescriptorToSets("ubo", globalUbo->descriptorInfo(), *globalPool);
+    pointLightSystem.writeDescriptorToSets("texSampler", tempTexture->getDescriptorImageInfo(), *globalPool);
+    pointLightSystem.writeDescriptorToSets("uboVert", globalUbo->descriptorInfo(), *globalPool);
+    pointLightSystem.writeDescriptorToSets("texSamplerVert", tempTexture->getDescriptorImageInfo(), *globalPool);
+    pointLightSystem.finishWriteDescriptor();
 
     //=================================== update camera object .etc =================================
 
@@ -116,7 +108,6 @@ void FirstApp::run()
                 frameTime,
                 commandBuffer,
                 camera,
-                lveShader,
                 gameObjects
             };
 

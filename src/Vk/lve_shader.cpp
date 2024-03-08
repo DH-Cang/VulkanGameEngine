@@ -6,37 +6,47 @@
 #include <cassert>
 #include <iostream>
 
-// tmp
-#include "lve_swap_chain.hpp"
-#include "temp.hpp"
-
 namespace Vk
 {
     
 
-    LveShader::LveShader(LveDevice& device, LveDescriptorPool& descriptorPool, const std::string& vertShaderPath, const std::string& fragShaderPath):
-        lveDescriptorPool(descriptorPool)
+    LveShader::LveShader(
+        LveDevice& device, 
+        std::unordered_map<std::string, SetAndBinding>& descriptorSignature, 
+        std::vector<std::unique_ptr<LveDescriptorSetLayout>>& descriptorSetLayouts, 
+        const std::string& fragShaderPath):
+        lveDevice(device), descriptorSignature(descriptorSignature), descriptorSetLayouts(descriptorSetLayouts)
     {
-        std::vector<DescriptorSetLayoutData> reflectionData;
-        ShaderReflection(fragShaderPath, reflectionData); // TODO: only check frag shader
+        auto shaderCode = Util::readFile(fragShaderPath);
+        createShaderModule(shaderCode, &shaderModule);
 
-        descriptorWriters.resize(reflectionData.size(), nullptr);
-        descriptorSetLayouts.resize(reflectionData.size());
-        // for each descriptor layout
+        std::vector<DescriptorSetLayoutData> reflectionData;
+        ShaderReflection(shaderCode, reflectionData); // TODO: only check frag shader
+
+        // according to reflection create descriptor set layout
         for(int i=0; i<reflectionData.size(); i++)
         {
             DescriptorSetLayoutData& setLayout = reflectionData[i];
-            descriptorSetLayouts[i] = std::make_unique<LveDescriptorSetLayout>(
+            auto setId = setLayout.set_number;
+            while(setId >= descriptorSetLayouts.size())
+            {
+                descriptorSetLayouts.push_back(nullptr);
+            }
+            descriptorSetLayouts[setId] = std::make_unique<LveDescriptorSetLayout>(
                 device, setLayout.create_info
             );
         }
     }
 
-    void LveShader::ShaderReflection(const std::string& shaderFilePath, std::vector<DescriptorSetLayoutData>& outReflectionData)
+    LveShader::~LveShader()
+    { 
+        spvReflectDestroyShaderModule(&module);
+        vkDestroyShaderModule(lveDevice.device(), shaderModule, nullptr);
+    }
+
+    void LveShader::ShaderReflection(const std::vector<char>& shaderCode, std::vector<DescriptorSetLayoutData>& outReflectionData)
     {
         // reflection
-        auto shaderCode = Util::readFile(shaderFilePath);
-
         SpvReflectResult result = spvReflectCreateShaderModule(shaderCode.size(), shaderCode.data(), &module);
         assert(result == SPV_REFLECT_RESULT_SUCCESS);
 
@@ -65,9 +75,6 @@ namespace Vk
                     layout_binding.descriptorCount *= refl_binding.array.dims[i_dim];
                 }
                 layout_binding.stageFlags = static_cast<VkShaderStageFlagBits>(module.shader_stage);
-
-                // TODO: temp stage flag
-                layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
             }
             layout.set_number = refl_set.set;
             layout.create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -78,7 +85,7 @@ namespace Vk
         // application they would be merged with similar structures from other shader
         // stages and/or pipelines to create a VkPipelineLayout.
 
-        PrintReflectionInfo(module, reflectDescriptorSets);
+        //PrintReflectionInfo(module, reflectDescriptorSets);
 
         // for each set
         for(size_t setId = 0; setId < reflectDescriptorSets.size(); setId++)
@@ -91,72 +98,25 @@ namespace Vk
                 const SpvReflectDescriptorBinding& refl_binding = *(refl_set.bindings[bindingId]);
                 std::string name{refl_binding.name};
                 SetAndBinding setAndBinding{
-                    static_cast<uint32_t>(setId),
+                    static_cast<uint32_t>(refl_set.set),
                     refl_binding.binding
                 };
                 assert(descriptorSignature.find(name) == descriptorSignature.end());
                 descriptorSignature[name] = setAndBinding;
             }
         }
+    }
 
-        // temp
-        for(auto& iter : descriptorSignature )
+    void LveShader::createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule)
+    {
+        VkShaderModuleCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.codeSize = code.size();
+        createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+
+        if(vkCreateShaderModule(lveDevice.device(), &createInfo, nullptr, shaderModule) != VK_SUCCESS)
         {
-            printf("%s, set %d, binding %d\n", iter.first.c_str(), iter.second.setId, iter.second.bindingId);
+            throw std::runtime_error("faile to create shader module");
         }
     }
-
-
-    void LveShader::WriteDescriptor(const std::string& name, VkDescriptorBufferInfo bufferInfo)
-    {
-        const auto& descriptorRecord = descriptorSignature.find(name);
-        assert(descriptorRecord != descriptorSignature.end());
-        auto setId = descriptorRecord->second.setId;
-        auto bindingId = descriptorRecord->second.bindingId;
-
-        if(descriptorWriters[setId] == nullptr)
-        {
-            descriptorWriters[setId] = std::make_shared<LveDescriptorWriter>(*descriptorSetLayouts[setId], lveDescriptorPool);
-        }
-        descriptorWriters[setId]->writeBuffer(bindingId, &bufferInfo);
-    }
-
-    void LveShader::WriteDescriptor(const std::string& name, VkDescriptorImageInfo imageInfo)
-    {
-        const auto& descriptorRecord = descriptorSignature.find(name);
-        assert(descriptorRecord != descriptorSignature.end());
-        auto setId = descriptorRecord->second.setId;
-        auto bindingId = descriptorRecord->second.bindingId;
-
-        if(descriptorWriters[setId] == nullptr)
-        {
-            descriptorWriters[setId] = std::make_shared<LveDescriptorWriter>(*descriptorSetLayouts[setId], lveDescriptorPool);
-        }
-        descriptorWriters[setId]->writeImage(bindingId, &imageInfo);
-    }
-
-    void LveShader::FinishWriteDescriptor()
-    {
-        assert(descriptorWriters.size() == descriptorSetLayouts.size());
-        descriptorSets.resize(descriptorWriters.size());
-        for(int i=0; i<descriptorWriters.size(); i++)
-        {
-            descriptorWriters[i]->build(descriptorSets[i]);
-        }
-    }
-
-    void LveShader::Bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout)
-    {
-        vkCmdBindDescriptorSets(
-            commandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout,
-            0,
-            descriptorSets.size(),
-            descriptorSets.data(),
-            0,
-            nullptr
-        );
-    }
-
 }
