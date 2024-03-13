@@ -28,10 +28,32 @@ namespace EngineCore
 {
     Model::Model(Vk::LveDevice& device): lveDevice{device} {}
 
-    void Model::bindAndDraw(VkCommandBuffer commandBuffer)
+    void Model::bindAndDraw(VkCommandBuffer commandBuffer, Vk::LveDescriptorSetLayout &setLayout, Vk::LveDescriptorPool &pool, VkPipelineLayout pipelineLayout)
     {
-        for(auto& model : lveModels)
+        for(int i=0; i<lveModels.size(); i++)
         {
+            auto& material = materials[i];
+            if(material.is_descriptor_allocated == false)
+            {
+                assert(material.ubo != nullptr);
+                auto descriptorInfo = material.ubo->descriptorInfo();
+                Vk::LveDescriptorWriter writer(setLayout, pool);
+                writer.writeBuffer(0, &descriptorInfo).build(material.descriptorSet);
+                material.is_descriptor_allocated = true;
+            }
+
+            vkCmdBindDescriptorSets(
+                commandBuffer,
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                pipelineLayout,
+                2,
+                1,
+                &material.descriptorSet,
+                0,
+                nullptr
+            );
+
+            auto& model = lveModels[i];
             model->bind(commandBuffer);
             model->draw(commandBuffer);
         }
@@ -59,10 +81,10 @@ namespace EngineCore
             tinyobj::material_t& obj_material = obj_materials[i];
             Material& model_material = temp_materials[i];
 
-            model_material.ambient[0] = obj_material.ambient[0];
-            model_material.ambient[1] = obj_material.ambient[1];
-            model_material.ambient[2] = obj_material.ambient[2];
-            model_material.blinn_factor = 32.0f;
+            model_material.materialData.ambient[0] = obj_material.ambient[0];
+            model_material.materialData.ambient[1] = obj_material.ambient[1];
+            model_material.materialData.ambient[2] = obj_material.ambient[2];
+            model_material.materialData.blinn_factor = 32.0f;
         }
 
         std::vector<Vk::LveModel::Builder> builder_array(materialNum); // for each material, it has a builder
@@ -142,6 +164,14 @@ namespace EngineCore
             {
                 ret->lveModels.push_back(std::make_unique<Vk::LveModel>(device, builder));
                 ret->materials.push_back(temp_materials[i]);
+                ret->materials.back().ubo = std::make_shared<Vk::LveBuffer>(
+                    device,
+                    sizeof(Material::Data),
+                    1,
+                    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+                ret->materials.back().ubo->map();
+                ret->materials.back().ubo->writeToBuffer(&ret->materials.back().materialData);
             }
         }
         printf("Load %s, shapes num %d, material num %d\n", objPath.c_str(), ret->lveModels.size(), ret->materials.size());

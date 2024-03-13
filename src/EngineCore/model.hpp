@@ -19,7 +19,7 @@ namespace EngineCore
         Model& operator=(const Model&) = delete;
 
         static std::unique_ptr<Model> createModelFromFile(Vk::LveDevice& device, const std::string& filePath, const std::string& mtlBasePath);
-        void bindAndDraw(VkCommandBuffer commandBuffer);
+        void bindAndDraw(VkCommandBuffer commandBuffer, Vk::LveDescriptorSetLayout &setLayout, Vk::LveDescriptorPool &pool, VkPipelineLayout pipelineLayout);
         
     private:
         std::vector<std::unique_ptr<Vk::LveModel>> lveModels;

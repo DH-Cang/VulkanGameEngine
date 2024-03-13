@@ -29,8 +29,6 @@ layout(set = 0, binding = 0) uniform GlobalUbo
     int numLights;
 } uboVert;
 
-layout(set = 0, binding = 1) uniform sampler2D texSamplerVert;
-
 // constant
 layout(push_constant) uniform Push
 {

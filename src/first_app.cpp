@@ -61,7 +61,6 @@ void FirstApp::run()
     simpleRenderSystem.writeDescriptorToSets("ubo", globalUbo->descriptorInfo(), *globalPool);
     simpleRenderSystem.writeDescriptorToSets("texSampler", tempTexture->getDescriptorImageInfo(), *globalPool);
     simpleRenderSystem.writeDescriptorToSets("uboVert", globalUbo->descriptorInfo(), *globalPool);
-    simpleRenderSystem.writeDescriptorToSets("texSamplerVert", tempTexture->getDescriptorImageInfo(), *globalPool);
     simpleRenderSystem.finishWriteDescriptor();
 
     pointLightSystem.writeDescriptorToSets("ubo", globalUbo->descriptorInfo(), *globalPool);

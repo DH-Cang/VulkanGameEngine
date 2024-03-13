@@ -68,6 +68,9 @@ namespace EngineSystem
 
         std::vector<std::shared_ptr<Vk::LveDescriptorWriter>> descriptorWriters; // write into descriptor sets
         std::vector<VkDescriptorSet> descriptorSets;
+
+
+        std::unique_ptr<Vk::LveDescriptorPool> materialDescriptorPool = nullptr;
     };
 
 }

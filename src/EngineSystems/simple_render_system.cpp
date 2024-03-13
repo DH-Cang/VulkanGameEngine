@@ -27,6 +27,12 @@ namespace EngineSystem
 
         createPipelineLayout();
         createPipeline(renderPass);
+
+        materialDescriptorPool = Vk::LveDescriptorPool::Builder(lveDevice)
+            .setMaxSets(100) // can create 2 descriptor sets
+            .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100) // have 2 uniform buffer descriptor in total
+            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 10)
+            .build();
     }
 
     SimpleRenderSystem::~SimpleRenderSystem()
@@ -82,7 +88,6 @@ namespace EngineSystem
 
     void SimpleRenderSystem::renderGameObjects(EngineCore::FrameInfo& frameInfo)
     {
-        // render
         lvePipeline->bind(frameInfo.commandBuffer);
 
         bindDescriptorSets(frameInfo.commandBuffer, pipelineLayout);
@@ -104,7 +109,8 @@ namespace EngineSystem
                 sizeof(SimplePushConstantData), 
                 &push);
             
-            obj.model->bindAndDraw(frameInfo.commandBuffer);
+            assert(descriptorSetLayouts.size() >= 3);
+            obj.model->bindAndDraw(frameInfo.commandBuffer, *descriptorSetLayouts[2], *materialDescriptorPool, pipelineLayout);
         }
     }
 
@@ -143,7 +149,7 @@ namespace EngineSystem
         assert(descriptorSetLayouts.size() != 0);
         assert(descriptorWriters.size() == descriptorSetLayouts.size());
         descriptorSets.resize(descriptorWriters.size());
-        for(int i=0; i<descriptorWriters.size(); i++)
+        for(int i=0; i<descriptorWriters.size() - 1; i++)
         {
             assert(descriptorWriters[i] != nullptr);
             descriptorWriters[i]->build(descriptorSets[i]);
@@ -157,7 +163,7 @@ namespace EngineSystem
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             pipelineLayout,
             0,
-            descriptorSets.size(),
+            descriptorSets.size() - 1,
             descriptorSets.data(),
             0,
             nullptr

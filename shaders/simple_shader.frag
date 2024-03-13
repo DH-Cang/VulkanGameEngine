@@ -28,6 +28,12 @@ layout(set = 1, binding = 0) uniform GlobalUbo
 
 layout(set = 1, binding = 1) uniform sampler2D texSampler;
 
+layout(set = 2, binding = 0) uniform MaterialUbo
+{
+    vec4 final_ambient; // ignore w
+    float blinnFactor;
+} ubo2;
+
 // constant
 layout(push_constant) uniform Push
 {
@@ -65,5 +71,5 @@ void main()
     }
 
     vec3 temp_albedo = texture(texSampler, fragTexCoord).xyz;
-    outColor = vec4(diffuseLight * temp_albedo + specularLight, 1.0f);
+    outColor = vec4(diffuseLight * temp_albedo + specularLight, 1.0f) * vec4(ubo2.final_ambient.rgb, 1.0f);
 }
