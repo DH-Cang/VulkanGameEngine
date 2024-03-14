@@ -1,7 +1,6 @@
 #pragma once 
 
 #include "lve_device.hpp"
-#include "lve_shader.hpp"
 
 #include <string>
 #include <vector>

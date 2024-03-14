@@ -38,9 +38,6 @@ namespace EngineSystem
         void createDescriptorSetPerFrame(const std::string& name, VkDescriptorImageInfo imageInfo, VkShaderStageFlags stageFlags);
         void finishCreateDescriptorSetPerFrame();
 
-        void createDescriptorSetPerObject(const std::string& name, VkDescriptorBufferInfo bufferInfo);
-        void createDescriptorSetPerObject(const std::string& name, VkDescriptorImageInfo imageInfo);
-
 
     private:
         void createPipeline(VkRenderPass renderPass);

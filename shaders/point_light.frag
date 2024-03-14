@@ -9,25 +9,13 @@ struct PointLight
     vec4 color; // w is intensity
 };
 
-// uniform buffer
-layout(set = 1, binding = 0) uniform GlobalUbo
-{
-    mat4 projectionMatrix;
-    mat4 viewMatrix;
-    mat4 inverseViewMatrix;
-    vec4 ambientLightColor; // w is intensity
-    PointLight PointLights[10];
-    int numLights;
-} ubo;
-
-layout(set = 1, binding = 1) uniform sampler2D texSampler;
-
-layout(push_constant) uniform Push
+// set1 per object
+layout(set = 1, binding = 0) uniform PerObjectUbo
 {
     vec4 position;
     vec4 color;
     float radius;
-} push;
+} perObjectUbo;
 
 const float M_PI = 3.1415926538;
 
@@ -37,5 +25,5 @@ void main()
     if(disSquare >= 1.0){
         discard;
     }
-    outColor = vec4(push.color.xyz, 0.5f * (cos(sqrt(disSquare) * M_PI) + 1.0f));
+    outColor = vec4(perObjectUbo.color.xyz, 0.5f * (cos(sqrt(disSquare) * M_PI) + 1.0f));
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Vk/lve_descriptors.hpp"
 #include "Vk/lve_pipeline.hpp"
+#include "Vk/lve_buffer.hpp"
 
 // libs
 #define GLM_FORCE_RADIANS
@@ -10,8 +10,7 @@
 #include <glm/gtc/constants.hpp>
 
 // std
-#include <unordered_map>
-#include <string>
+#include <memory>
 
 namespace EngineCore
 {

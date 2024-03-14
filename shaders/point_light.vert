@@ -17,7 +17,7 @@ struct PointLight
     vec4 color; // w is intensity
 };
 
-// uniform buffer
+// set0 per frame
 layout(set = 0, binding = 0) uniform GlobalUbo
 {
     mat4 projectionMatrix;
@@ -26,26 +26,25 @@ layout(set = 0, binding = 0) uniform GlobalUbo
     vec4 ambientLightColor; // w is intensity
     PointLight PointLights[10];
     int numLights;
-} uboVert;
+} ubo;
 
-layout(set = 0, binding = 1) uniform sampler2D texSamplerVert;
-
-layout(push_constant) uniform Push
+// set1 per object
+layout(set = 1, binding = 0) uniform PerObjectUbo
 {
     vec4 position;
     vec4 color;
     float radius;
-} push;
+} perObjectUbo;
 
 void main()
 {
     fragOffset = OFFSETS[gl_VertexIndex];
-    vec3 cameraRightWorld = {uboVert.viewMatrix[0][0], uboVert.viewMatrix[1][0], uboVert.viewMatrix[2][0]};
-    vec3 cameraUpWorld = {uboVert.viewMatrix[0][1], uboVert.viewMatrix[1][1], uboVert.viewMatrix[2][1]};
+    vec3 cameraRightWorld = {ubo.viewMatrix[0][0], ubo.viewMatrix[1][0], ubo.viewMatrix[2][0]};
+    vec3 cameraUpWorld = {ubo.viewMatrix[0][1], ubo.viewMatrix[1][1], ubo.viewMatrix[2][1]};
 
-    vec3 positionWorld = push.position.xyz
-        + push.radius * fragOffset.x * cameraRightWorld
-        + push.radius * fragOffset.y * cameraUpWorld;
+    vec3 positionWorld = perObjectUbo.position.xyz
+        + perObjectUbo.radius * fragOffset.x * cameraRightWorld
+        + perObjectUbo.radius * fragOffset.y * cameraUpWorld;
 
-    gl_Position = uboVert.projectionMatrix * uboVert.viewMatrix * vec4(positionWorld, 1.0f);
+    gl_Position = ubo.projectionMatrix * ubo.viewMatrix * vec4(positionWorld, 1.0f);
 }

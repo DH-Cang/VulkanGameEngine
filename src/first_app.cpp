@@ -21,19 +21,11 @@
 
 FirstApp::FirstApp()
 {
-    // descriptor pool
-    globalPool = Vk::LveDescriptorPool::Builder(lveDevice)
-        .setMaxSets(1000) // can create 2 descriptor sets
-        .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000) // have 2 uniform buffer descriptor in total
-        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 50)
-        .build();
-
     loadGameObjects();
 }
 
 FirstApp::~FirstApp()
 {
-    globalPool = nullptr;
 }
 
 void FirstApp::run()
@@ -58,6 +50,7 @@ void FirstApp::run()
     };
     EngineSystem::PointLightSystem pointLightSystem{
         lveDevice, 
+        descriptorLayoutCache,
         lveRenderer.getSwapChainRenderPass()
     };
 
@@ -65,11 +58,8 @@ void FirstApp::run()
     simpleRenderSystem.createDescriptorSetPerFrame("texSampler", tempTexture->getDescriptorImageInfo(), VK_SHADER_STAGE_FRAGMENT_BIT);
     simpleRenderSystem.finishCreateDescriptorSetPerFrame();
 
-    pointLightSystem.writeDescriptorToSets("ubo", globalUbo->descriptorInfo(), *globalPool);
-    pointLightSystem.writeDescriptorToSets("texSampler", tempTexture->getDescriptorImageInfo(), *globalPool);
-    pointLightSystem.writeDescriptorToSets("uboVert", globalUbo->descriptorInfo(), *globalPool);
-    pointLightSystem.writeDescriptorToSets("texSamplerVert", tempTexture->getDescriptorImageInfo(), *globalPool);
-    pointLightSystem.finishWriteDescriptor();
+    pointLightSystem.createDescriptorSetPerFrame("ubo", globalUbo->descriptorInfo(), VK_SHADER_STAGE_VERTEX_BIT);
+    pointLightSystem.finishCreateDescriptorSetPerFrame();
 
     //=================================== update camera object .etc =================================
 

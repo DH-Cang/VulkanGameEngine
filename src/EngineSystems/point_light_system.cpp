@@ -12,63 +12,33 @@
 
 namespace EngineSystem
 {
-    struct PointLightPushConstants
+    struct PointLightPerObjectData
     {
         glm::vec4 position{};
         glm::vec4 color{};
         float radius;
     };
 
-
-    PointLightSystem::PointLightSystem(Vk::LveDevice& device, VkRenderPass renderPass):
-        lveDevice{device}
+    PointLightSystem::PointLightSystem(Vk::LveDevice& device, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkRenderPass renderPass):
+        lveDevice{device},
+        descriptorAllocator(device.device()),
+        descriptorLayoutCache(descriptorLayoutCache),
+        descriptorBuilderPerFrame(descriptorLayoutCache, descriptorAllocator),
+        shaderEffect(device.device(), descriptorLayoutCache, 
+        "./build/ShaderBin/point_light.vert.spv", 
+        "./build/ShaderBin/point_light.frag.spv")
     {
-        vertShader = createShader("./build/ShaderBin/point_light.vert.spv");
-        fragShader = createShader("./build/ShaderBin/point_light.frag.spv");
-        descriptorWriters.resize(descriptorSetLayouts.size());
-
-        createPipelineLayout();
         createPipeline(renderPass);
     }
 
     PointLightSystem::~PointLightSystem()
     {
-        vkDestroyPipelineLayout(lveDevice.device(), pipelineLayout, nullptr);
     }
 
-    std::unique_ptr<Vk::LveShader> PointLightSystem::createShader(const std::string& shaderFilePath)
-    {
-        return std::make_unique<Vk::LveShader>(lveDevice, descriptorSignature, descriptorSetLayouts, shaderFilePath);
-    }
-
-    void PointLightSystem::createPipelineLayout()
-    {
-        std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts(descriptorSetLayouts.size());
-        for(int i=0; i<vkDescriptorSetLayouts.size(); i++)
-        {
-            vkDescriptorSetLayouts[i] = descriptorSetLayouts[i]->getDescriptorSetLayout();
-        }
-
-        VkPushConstantRange pushConstantRange{};
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-        pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(PointLightPushConstants);
-
-        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(vkDescriptorSetLayouts.size());
-        pipelineLayoutInfo.pSetLayouts = vkDescriptorSetLayouts.data();
-        pipelineLayoutInfo.pushConstantRangeCount = 1;
-        pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
-        if(vkCreatePipelineLayout(lveDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create pipeline layout");
-        }
-    }
 
     void PointLightSystem::createPipeline(VkRenderPass renderPass)
     {
-        assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
+        assert(shaderEffect.getPipelineLayout() != nullptr && "Cannot create pipeline before pipeline layout");
 
         Vk::PipelineConfigInfo pipelineConfig{};
         Vk::LvePipeline::defaultPipelineConfigInfo(pipelineConfig);
@@ -76,11 +46,11 @@ namespace EngineSystem
         pipelineConfig.bindingDescriptions.clear();
         pipelineConfig.attributeDescriptions.clear();
         pipelineConfig.renderPass = renderPass;
-        pipelineConfig.pipelineLayout = pipelineLayout;
+        pipelineConfig.pipelineLayout = shaderEffect.getPipelineLayout();
         lvePipeline = std::make_unique<Vk::LvePipeline>(
             lveDevice, 
-            vertShader->shaderModule, 
-            fragShader->shaderModule, 
+            shaderEffect.getVertShaderModule(), 
+            shaderEffect.getFragShaderModule(), 
             pipelineConfig
         );
     }
@@ -131,7 +101,7 @@ namespace EngineSystem
         // render
         lvePipeline->bind(frameInfo.commandBuffer);
 
-        bindDescriptorSets(frameInfo.commandBuffer, pipelineLayout);
+        bindDescriptorSetsPerFrame(frameInfo.commandBuffer);
 
         // iterate through sorted lights in reverse order
         for(auto it = sorted.rbegin(); it != sorted.rend(); it++)
@@ -139,77 +109,87 @@ namespace EngineSystem
             // use game obj id to find light obj
             auto& obj = frameInfo.gameObjects.at(it->second);
 
-            PointLightPushConstants push{};
-            push.position = glm::vec4(obj.transform.translation, 1.0f);
-            push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
-            push.radius = obj.transform.scale.x;
+            if(obj.transform.is_descriptor_allocated == false)
+            {
+                if(obj.transform.ubo == nullptr)
+                {
+                    obj.transform.ubo = std::make_shared<Vk::LveBuffer>(
+                        lveDevice,
+                        sizeof(PointLightPerObjectData),
+                        1,
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+                    obj.transform.ubo->map();
+                }
+                auto descriptorInfo = obj.transform.ubo->descriptorInfo();
+                Vk::DescriptorBuilder builder(descriptorLayoutCache, descriptorAllocator);
+                builder.bind_buffer(0, &descriptorInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT).build(obj.transform.descriptorSet);
+                obj.transform.is_descriptor_allocated = true;
+            }
 
-            vkCmdPushConstants(
-                frameInfo.commandBuffer, 
-                pipelineLayout, 
-                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 
+            PointLightPerObjectData perObjectUboData
+            {
+                glm::vec4(obj.transform.translation, 1.0f),
+                glm::vec4(obj.color, obj.pointLight->lightIntensity),
+                obj.transform.scale.x
+            };
+            obj.transform.ubo->writeToBuffer(&perObjectUboData);
+
+            vkCmdBindDescriptorSets(
+                frameInfo.commandBuffer,
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                shaderEffect.getPipelineLayout(),
+                1,
+                1,
+                &obj.transform.descriptorSet,
                 0,
-                sizeof(PointLightPushConstants), 
-                &push
+                nullptr
             );
+
             vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
         }
     }
 
 
-    void PointLightSystem::writeDescriptorToSets(const std::string& name, VkDescriptorBufferInfo bufferInfo, Vk::LveDescriptorPool& descriptorPool)
+    void PointLightSystem::createDescriptorSetPerFrame(const std::string& name, VkDescriptorBufferInfo bufferInfo, VkShaderStageFlags stageFlags)
     {
-        const auto& descriptorRecord = descriptorSignature.find(name);
-        assert(descriptorRecord != descriptorSignature.end());
-        auto setId = descriptorRecord->second.setId;
-        auto bindingId = descriptorRecord->second.bindingId;
-
-        assert(descriptorWriters.size() == descriptorSetLayouts.size());
-        if(descriptorWriters[setId] == nullptr)
-        {
-            descriptorWriters[setId] = std::make_shared<Vk::LveDescriptorWriter>(*descriptorSetLayouts[setId], descriptorPool);
-        }
-        descriptorWriters[setId]->writeBuffer(bindingId, &bufferInfo);
+        const auto setAndBinding = shaderEffect.getSetAndBinding(name);
+        assert(setAndBinding.setId == 0); // per frame set can only be set0
+        descriptorBuilderPerFrame.bind_buffer(
+            setAndBinding.bindingId, 
+            &bufferInfo, 
+            setAndBinding.type, 
+            stageFlags);
     }
 
-    void PointLightSystem::writeDescriptorToSets(const std::string& name, VkDescriptorImageInfo imageInfo, Vk::LveDescriptorPool& descriptorPool)
+    void PointLightSystem::createDescriptorSetPerFrame(const std::string& name, VkDescriptorImageInfo imageInfo, VkShaderStageFlags stageFlags)
     {
-        const auto& descriptorRecord = descriptorSignature.find(name);
-        assert(descriptorRecord != descriptorSignature.end());
-        auto setId = descriptorRecord->second.setId;
-        auto bindingId = descriptorRecord->second.bindingId;
-
-        assert(descriptorWriters.size() == descriptorSetLayouts.size());
-        if(descriptorWriters[setId] == nullptr)
-        {
-            descriptorWriters[setId] = std::make_shared<Vk::LveDescriptorWriter>(*descriptorSetLayouts[setId], descriptorPool);
-        }
-        descriptorWriters[setId]->writeImage(bindingId, &imageInfo);
+        const auto setAndBinding = shaderEffect.getSetAndBinding(name);
+        assert(setAndBinding.setId == 0); // per frame set can only be set0 and set1
+        descriptorBuilderPerFrame.bind_image(
+            setAndBinding.bindingId, 
+            &imageInfo, 
+            setAndBinding.type, 
+            stageFlags);
     }
 
-    void PointLightSystem::finishWriteDescriptor()
+    void PointLightSystem::finishCreateDescriptorSetPerFrame()
     {
-        assert(descriptorWriters.size() == descriptorSetLayouts.size());
-        descriptorSets.resize(descriptorWriters.size());
-        for(int i=0; i<descriptorWriters.size(); i++)
-        {
-            assert(descriptorWriters[i] != nullptr);
-            descriptorWriters[i]->build(descriptorSets[i]);
-        }
+        descriptorBuilderPerFrame.build(descriptorSetsPerFrame);
     }
 
-    void PointLightSystem::bindDescriptorSets(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout)
+    void PointLightSystem::bindDescriptorSetsPerFrame(VkCommandBuffer commandBuffer)
     {
         vkCmdBindDescriptorSets(
             commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout,
+            shaderEffect.getPipelineLayout(),
             0,
-            descriptorSets.size(),
-            descriptorSets.data(),
+            1,
+            &descriptorSetsPerFrame,
             0,
             nullptr
         );
     }
 
-};
+}
