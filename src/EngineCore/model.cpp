@@ -28,7 +28,7 @@ namespace EngineCore
 {
     Model::Model(Vk::LveDevice& device): lveDevice{device} {}
 
-    void Model::bindAndDraw(VkCommandBuffer commandBuffer, Vk::LveDescriptorSetLayout &setLayout, Vk::LveDescriptorPool &pool, VkPipelineLayout pipelineLayout)
+    void Model::bindAndDraw(VkCommandBuffer commandBuffer, Vk::DescriptorAllocator& descriptorAllocator, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkPipelineLayout pipelineLayout)
     {
         for(int i=0; i<lveModels.size(); i++)
         {
@@ -37,8 +37,8 @@ namespace EngineCore
             {
                 assert(material.ubo != nullptr);
                 auto descriptorInfo = material.ubo->descriptorInfo();
-                Vk::LveDescriptorWriter writer(setLayout, pool);
-                writer.writeBuffer(0, &descriptorInfo).build(material.descriptorSet);
+                Vk::DescriptorBuilder builder(descriptorLayoutCache, descriptorAllocator);
+                builder.bind_buffer(0, &descriptorInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT).build(material.descriptorSet);
                 material.is_descriptor_allocated = true;
             }
 

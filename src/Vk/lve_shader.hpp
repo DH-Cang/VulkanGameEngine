@@ -21,6 +21,7 @@ namespace Vk
         {
             uint32_t setId;
             uint32_t bindingId;
+            VkDescriptorType type = VK_DESCRIPTOR_TYPE_MAX_ENUM;
         };
 
         LveShader(
@@ -37,14 +38,15 @@ namespace Vk
 
         VkShaderModule getShaderModule() const { return shaderModule; }
 
-    private:
-        struct DescriptorSetLayoutData
+        struct ReflectSetLayoutData
         {
             uint32_t set_number;
             VkDescriptorSetLayoutCreateInfo create_info;
             std::vector<VkDescriptorSetLayoutBinding> bindings;
         };
 
+        VkShaderModule shaderModule;
+    private:
         LveDevice& lveDevice;
         std::unordered_map<std::string, SetAndBinding>& descriptorSignature;
         std::vector<std::unique_ptr<LveDescriptorSetLayout>>& descriptorSetLayouts;
@@ -52,14 +54,10 @@ namespace Vk
         SpvReflectShaderModule module = {};
         std::vector<SpvReflectDescriptorSet*> reflectDescriptorSets;
 
-        
-
-
-        void ShaderReflection(const std::vector<char>& shaderCode, std::vector<DescriptorSetLayoutData>& outReflectionData);
+        void ShaderReflection(const std::vector<char>& shaderCode, std::vector<ReflectSetLayoutData>& outReflectionData);
 
         void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule);
 
-        VkShaderModule shaderModule;
         
     };
 }

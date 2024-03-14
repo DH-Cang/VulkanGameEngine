@@ -79,8 +79,8 @@ namespace EngineSystem
         pipelineConfig.pipelineLayout = pipelineLayout;
         lvePipeline = std::make_unique<Vk::LvePipeline>(
             lveDevice, 
-            *vertShader, 
-            *fragShader, 
+            vertShader->shaderModule, 
+            fragShader->shaderModule, 
             pipelineConfig
         );
     }

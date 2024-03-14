@@ -15,6 +15,7 @@ It is application's resbonsibility to check whether an object is compatible to a
 #include "Vk/lve_pipeline.hpp"
 #include "Vk/lve_device.hpp"
 #include "Vk/lve_shader.hpp"
+#include "Vk/vk_shader_effect.hpp"
 #include "EngineCore/frame_info.hpp"
 
 // std
@@ -26,7 +27,7 @@ namespace EngineSystem
     class SimpleRenderSystem
     {
     public:
-        SimpleRenderSystem(Vk::LveDevice& device, VkRenderPass renderPass);
+        SimpleRenderSystem(Vk::LveDevice& device, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkRenderPass renderPass);
         ~SimpleRenderSystem();
 
         SimpleRenderSystem(const SimpleRenderSystem&) = delete;
@@ -34,43 +35,29 @@ namespace EngineSystem
 
         void renderGameObjects(EngineCore::FrameInfo& frameInfo);
 
-        void writeDescriptorToSets(const std::string& name, VkDescriptorBufferInfo bufferInfo, Vk::LveDescriptorPool& descriptorPool);
-        void writeDescriptorToSets(const std::string& name, VkDescriptorImageInfo imageInfo, Vk::LveDescriptorPool& descriptorPool);
-        void finishWriteDescriptor();
-        
+        void createDescriptorSetPerFrame(const std::string& name, VkDescriptorBufferInfo bufferInfo, VkShaderStageFlags stageFlags);
+        void createDescriptorSetPerFrame(const std::string& name, VkDescriptorImageInfo imageInfo, VkShaderStageFlags stageFlags);
+        void finishCreateDescriptorSetPerFrame();
+
+        void createDescriptorSetPerObject(const std::string& name, VkDescriptorBufferInfo bufferInfo);
+        void createDescriptorSetPerObject(const std::string& name, VkDescriptorImageInfo imageInfo);
+
 
     private:
-        void createPipelineLayout();
         void createPipeline(VkRenderPass renderPass);
-        std::unique_ptr<Vk::LveShader> createShader(const std::string& shaderFilePath);
 
-        void bindDescriptorSets(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout);
-        void printDescriptorSignatures()
-        {
-            for(auto& iter : descriptorSignature )
-            {
-                printf("%s, set %d, binding %d\n", iter.first.c_str(), iter.second.setId, iter.second.bindingId);
-            }
-        }
+        void bindDescriptorSetsPerFrame(VkCommandBuffer commandBuffer);
 
         Vk::LveDevice& lveDevice;
         
-        std::unique_ptr<Vk::LvePipeline> lvePipeline;
-        VkPipelineLayout pipelineLayout;
-
-
-        std::unique_ptr<Vk::LveShader> vertShader;
-        std::unique_ptr<Vk::LveShader> fragShader;
+        Vk::DescriptorAllocator descriptorAllocator;
+        Vk::DescriptorLayoutCache& descriptorLayoutCache;
+        std::vector<Vk::DescriptorBuilder> descriptorBuilderPerFrame;
+        std::vector<VkDescriptorSet> descriptorSetsPerFrame;
+        std::vector<VkDescriptorSet> descriptorSetsPerObject;
         
-
-        std::unordered_map<std::string, Vk::LveShader::SetAndBinding> descriptorSignature; // shader reflection data goes into this obj
-        std::vector<std::unique_ptr<Vk::LveDescriptorSetLayout>> descriptorSetLayouts; // after shader is created, this obj is populated with descriptor set layout
-
-        std::vector<std::shared_ptr<Vk::LveDescriptorWriter>> descriptorWriters; // write into descriptor sets
-        std::vector<VkDescriptorSet> descriptorSets;
-
-
-        std::unique_ptr<Vk::LveDescriptorPool> materialDescriptorPool = nullptr;
+        Vk::ShaderEffect shaderEffect;
+        std::unique_ptr<Vk::LvePipeline> lvePipeline;
     };
 
 }

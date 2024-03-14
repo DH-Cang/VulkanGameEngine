@@ -49,8 +49,11 @@ void FirstApp::run()
     );
     globalUbo->map();
 
+    Vk::DescriptorLayoutCache descriptorLayoutCache{lveDevice.device()};
+
     EngineSystem::SimpleRenderSystem simpleRenderSystem{
         lveDevice, 
+        descriptorLayoutCache,
         lveRenderer.getSwapChainRenderPass()
     };
     EngineSystem::PointLightSystem pointLightSystem{
@@ -58,10 +61,10 @@ void FirstApp::run()
         lveRenderer.getSwapChainRenderPass()
     };
 
-    simpleRenderSystem.writeDescriptorToSets("ubo", globalUbo->descriptorInfo(), *globalPool);
-    simpleRenderSystem.writeDescriptorToSets("texSampler", tempTexture->getDescriptorImageInfo(), *globalPool);
-    simpleRenderSystem.writeDescriptorToSets("uboVert", globalUbo->descriptorInfo(), *globalPool);
-    simpleRenderSystem.finishWriteDescriptor();
+    simpleRenderSystem.createDescriptorSetPerFrame("ubo", globalUbo->descriptorInfo(), VK_SHADER_STAGE_FRAGMENT_BIT);
+    simpleRenderSystem.createDescriptorSetPerFrame("texSampler", tempTexture->getDescriptorImageInfo(), VK_SHADER_STAGE_FRAGMENT_BIT);
+    simpleRenderSystem.createDescriptorSetPerFrame("uboVert", globalUbo->descriptorInfo(), VK_SHADER_STAGE_VERTEX_BIT);
+    simpleRenderSystem.finishCreateDescriptorSetPerFrame();
 
     pointLightSystem.writeDescriptorToSets("ubo", globalUbo->descriptorInfo(), *globalPool);
     pointLightSystem.writeDescriptorToSets("texSampler", tempTexture->getDescriptorImageInfo(), *globalPool);

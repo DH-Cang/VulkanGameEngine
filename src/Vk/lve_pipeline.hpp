@@ -35,8 +35,8 @@ namespace Vk
     public:
         LvePipeline(
             LveDevice& device, 
-            const LveShader& vertShader, 
-            const LveShader& fragShader, 
+            VkShaderModule vertShader, 
+            VkShaderModule fragShader, 
             const PipelineConfigInfo& configInfo);
 
         ~LvePipeline();
@@ -54,8 +54,8 @@ namespace Vk
     private:
 
         void createGraphicsPipeline(
-            const LveShader& vertShader, 
-            const LveShader& fragShader, 
+            VkShaderModule vertShader, 
+            VkShaderModule fragShader, 
             const PipelineConfigInfo& configInfo);
 
         LveDevice& lveDevice;

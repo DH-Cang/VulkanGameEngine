@@ -20,13 +20,13 @@ namespace Vk
         auto shaderCode = Util::readFile(fragShaderPath);
         createShaderModule(shaderCode, &shaderModule);
 
-        std::vector<DescriptorSetLayoutData> reflectionData;
+        std::vector<ReflectSetLayoutData> reflectionData;
         ShaderReflection(shaderCode, reflectionData); // TODO: only check frag shader
 
         // according to reflection create descriptor set layout
         for(int i=0; i<reflectionData.size(); i++)
         {
-            DescriptorSetLayoutData& setLayout = reflectionData[i];
+            ReflectSetLayoutData& setLayout = reflectionData[i];
             auto setId = setLayout.set_number;
             while(setId >= descriptorSetLayouts.size())
             {
@@ -44,7 +44,7 @@ namespace Vk
         vkDestroyShaderModule(lveDevice.device(), shaderModule, nullptr);
     }
 
-    void LveShader::ShaderReflection(const std::vector<char>& shaderCode, std::vector<DescriptorSetLayoutData>& outReflectionData)
+    void LveShader::ShaderReflection(const std::vector<char>& shaderCode, std::vector<ReflectSetLayoutData>& outReflectionData)
     {
         // reflection
         SpvReflectResult result = spvReflectCreateShaderModule(shaderCode.size(), shaderCode.data(), &module);
@@ -63,7 +63,7 @@ namespace Vk
         outReflectionData.resize(count);
         for (size_t i_set = 0; i_set < reflectDescriptorSets.size(); ++i_set) {
             const SpvReflectDescriptorSet& refl_set = *(reflectDescriptorSets[i_set]);
-            DescriptorSetLayoutData& layout = outReflectionData[i_set];
+            ReflectSetLayoutData& layout = outReflectionData[i_set];
             layout.bindings.resize(refl_set.binding_count);
             for (uint32_t i_binding = 0; i_binding < refl_set.binding_count; ++i_binding) {
                 const SpvReflectDescriptorBinding& refl_binding = *(refl_set.bindings[i_binding]);

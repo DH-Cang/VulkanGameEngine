@@ -11,8 +11,8 @@ namespace Vk {
 
     LvePipeline::LvePipeline(
             LveDevice& device, 
-            const LveShader& vertShader, 
-            const LveShader& fragShader, 
+            VkShaderModule vertShader, 
+            VkShaderModule fragShader, 
             const PipelineConfigInfo& configInfo): lveDevice(device)
     {
         createGraphicsPipeline(vertShader, fragShader, configInfo);
@@ -24,8 +24,8 @@ namespace Vk {
     }
 
     void LvePipeline::createGraphicsPipeline(
-        const LveShader& vertShader, 
-        const LveShader& fragShader, 
+        VkShaderModule vertShader, 
+        VkShaderModule fragShader, 
         const PipelineConfigInfo& configInfo)
     {
         assert(configInfo.pipelineLayout != VK_NULL_HANDLE &&
@@ -36,14 +36,14 @@ namespace Vk {
         VkPipelineShaderStageCreateInfo shaderStages[2];
         shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-        shaderStages[0].module = vertShader.getShaderModule();
+        shaderStages[0].module = vertShader;
         shaderStages[0].pName = "main";
         shaderStages[0].flags = 0;
         shaderStages[0].pNext = nullptr;
         shaderStages[0].pSpecializationInfo = nullptr;
         shaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        shaderStages[1].module = fragShader.getShaderModule();
+        shaderStages[1].module = fragShader;
         shaderStages[1].pName = "main";
         shaderStages[1].flags = 0;
         shaderStages[1].pNext = nullptr;
