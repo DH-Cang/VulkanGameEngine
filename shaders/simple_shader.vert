@@ -18,7 +18,7 @@ struct PointLight
     vec4 color; // w is intensity
 };
 
-// uniform buffer
+// set0: per frame constant
 layout(set = 0, binding = 0) uniform GlobalUbo
 {
     mat4 projectionMatrix;
@@ -27,20 +27,20 @@ layout(set = 0, binding = 0) uniform GlobalUbo
     vec4 ambientLightColor; // w is intensity
     PointLight PointLights[10];
     int numLights;
-} uboVert;
+} ubo;
 
-// constant
-layout(push_constant) uniform Push
+// set1: per object constant
+layout(set = 1, binding = 0) uniform PerObjectUbo
 {
     mat4 modelMatrix; // model
     mat4 normalMatrix;
-} push;
+} perObjectUbo;
 
 void main()
 {
-    vec4 positionWorld = push.modelMatrix * vec4(position, 1.0f); // position is a column vector
-    gl_Position = uboVert.projectionMatrix * uboVert.viewMatrix * positionWorld;
-    fragNormalWorld = normalize(mat3(push.normalMatrix) * normal);
+    vec4 positionWorld = perObjectUbo.modelMatrix * vec4(position, 1.0f); // position is a column vector
+    gl_Position = ubo.projectionMatrix * ubo.viewMatrix * positionWorld;
+    fragNormalWorld = normalize(mat3(perObjectUbo.normalMatrix) * normal);
     fragPosWorld = positionWorld.xyz;
     fragColor = color;
     fragTexCoord = uv;

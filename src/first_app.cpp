@@ -61,9 +61,8 @@ void FirstApp::run()
         lveRenderer.getSwapChainRenderPass()
     };
 
-    simpleRenderSystem.createDescriptorSetPerFrame("ubo", globalUbo->descriptorInfo(), VK_SHADER_STAGE_FRAGMENT_BIT);
+    simpleRenderSystem.createDescriptorSetPerFrame("ubo", globalUbo->descriptorInfo(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
     simpleRenderSystem.createDescriptorSetPerFrame("texSampler", tempTexture->getDescriptorImageInfo(), VK_SHADER_STAGE_FRAGMENT_BIT);
-    simpleRenderSystem.createDescriptorSetPerFrame("uboVert", globalUbo->descriptorInfo(), VK_SHADER_STAGE_VERTEX_BIT);
     simpleRenderSystem.finishCreateDescriptorSetPerFrame();
 
     pointLightSystem.writeDescriptorToSets("ubo", globalUbo->descriptorInfo(), *globalPool);

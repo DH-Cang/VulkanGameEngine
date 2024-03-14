@@ -2,6 +2,9 @@
 
 #include "vk_descriptor.hpp"
 
+// std
+#include <vector>
+
 namespace Vk
 {
     class ShaderEffect
@@ -16,13 +19,12 @@ namespace Vk
         ShaderEffect(const ShaderEffect&) = delete;
         ShaderEffect& operator=(const ShaderEffect&) = delete;
 
-        
-
         struct SetAndBinding
         {
             uint32_t setId;
             uint32_t bindingId;
             VkDescriptorType type = VK_DESCRIPTOR_TYPE_MAX_ENUM;
+            VkShaderStageFlags stageFlags = 0;
         };
 
         SetAndBinding getSetAndBinding(const std::string& name) const { return descriptorSignature.find(name)->second; }
@@ -40,31 +42,29 @@ namespace Vk
         }
 
     private:
-        
-
         VkPipelineLayout pipelineLayout;
 
         std::vector<VkDescriptorSetLayout> setLayouts;
         std::unordered_map<std::string, SetAndBinding> descriptorSignature; // shader reflection data goes into this obj
 
+        constexpr static uint32_t MAX_SET_NUMBER = 10;
+        constexpr static uint32_t MAX_BINDING_NUMBER = 10;
         struct ReflectSetLayoutData
         {
-            uint32_t set_number;
-            VkDescriptorSetLayoutCreateInfo create_info;
+            uint32_t setID;
+            VkDescriptorSetLayoutCreateInfo create_info{};
             std::vector<VkDescriptorSetLayoutBinding> bindings;
         };
-        // note that there must be no repeated set/binding/name in shader
         VkShaderModule vertShader;
-        std::vector<ReflectSetLayoutData> vertReflectData; // size == number of sets in vertex shader
         VkShaderModule fragShader;
-        std::vector<ReflectSetLayoutData> fragReflectData; // size == number of sets in frag shader
+        std::vector<ReflectSetLayoutData> reflectionData; 
 
         VkDevice device;
         DescriptorLayoutCache& layoutCache;
         
-
+        
         void loadShaderFromFile(const std::string& vertShaderPath, const std::string& fragShaderPath);
-        void getShaderReflection(const std::vector<char>& shaderCode, std::vector<ReflectSetLayoutData>& outReflectionData);
+        void getShaderReflection(const std::vector<char>& shaderCode);
         void createDescriptorSetLayouts();
         void createPipelineLayout();
     };

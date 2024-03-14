@@ -15,8 +15,8 @@ struct PointLight
     vec4 color; // w is intensity
 };
 
-// uniform buffer
-layout(set = 1, binding = 0) uniform GlobalUbo
+// set0: per frame constant
+layout(set = 0, binding = 0) uniform GlobalUbo
 {
     mat4 projectionMatrix;
     mat4 viewMatrix;
@@ -25,21 +25,14 @@ layout(set = 1, binding = 0) uniform GlobalUbo
     PointLight PointLights[10];
     int numLights;
 } ubo;
+layout(set = 0, binding = 1) uniform sampler2D texSampler;
 
-layout(set = 1, binding = 1) uniform sampler2D texSampler;
-
+// set2: per material constant
 layout(set = 2, binding = 0) uniform MaterialUbo
 {
     vec4 final_ambient; // ignore w
     float blinnFactor;
 } ubo2;
-
-// constant
-layout(push_constant) uniform Push
-{
-    mat4 modelMatrix; // model
-    mat4 normalMatrix;
-} push;
 
 void main()
 {

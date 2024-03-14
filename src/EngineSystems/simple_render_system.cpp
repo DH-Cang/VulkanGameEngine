@@ -11,7 +11,7 @@
 
 namespace EngineSystem
 {
-    struct SimplePushConstantData
+    struct PerObjectUboData
     {
         glm::mat4 modelMatrix{1.0f};
         glm::mat4 normalMatrix{1.0f};
@@ -22,16 +22,12 @@ namespace EngineSystem
         lveDevice{device},
         descriptorAllocator(device.device()),
         descriptorLayoutCache(descriptorLayoutCache),
-        shaderEffect(device.device(), 
-        descriptorLayoutCache, 
+        descriptorBuilderPerFrame(descriptorLayoutCache, descriptorAllocator),
+        shaderEffect(device.device(), descriptorLayoutCache, 
         "./build/ShaderBin/simple_shader.vert.spv", 
         "./build/ShaderBin/simple_shader.frag.spv")
     {
         createPipeline(renderPass);
-
-        Vk::DescriptorBuilder builder(descriptorLayoutCache, descriptorAllocator);
-        descriptorBuilderPerFrame.resize(2, builder);
-        descriptorSetsPerFrame.resize(2);
     }
 
     SimpleRenderSystem::~SimpleRenderSystem()
@@ -65,18 +61,42 @@ namespace EngineSystem
             auto& obj = kv.second;
             if(obj.model == nullptr) continue;
 
-            SimplePushConstantData push{};
-            push.modelMatrix = obj.transform.mat4();
-            push.normalMatrix = obj.transform.normalMatrix();
+            if(obj.transform.is_descriptor_allocated == false)
+            {
+                if(obj.transform.ubo == nullptr)
+                {
+                    obj.transform.ubo = std::make_shared<Vk::LveBuffer>(
+                        lveDevice,
+                        sizeof(PerObjectUboData),
+                        1,
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+                    obj.transform.ubo->map();
+                }
+                auto descriptorInfo = obj.transform.ubo->descriptorInfo();
+                Vk::DescriptorBuilder builder(descriptorLayoutCache, descriptorAllocator);
+                builder.bind_buffer(0, &descriptorInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT).build(obj.transform.descriptorSet);
+                obj.transform.is_descriptor_allocated = true;
+            }
 
-            vkCmdPushConstants(
-                frameInfo.commandBuffer, 
-                shaderEffect.getPipelineLayout(), 
-                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 
-                0, 
-                sizeof(SimplePushConstantData), 
-                &push);
-            
+            PerObjectUboData perObjectUboData
+            {
+                obj.transform.mat4(),
+                obj.transform.normalMatrix()
+            };
+            obj.transform.ubo->writeToBuffer(&perObjectUboData);
+
+            vkCmdBindDescriptorSets(
+                frameInfo.commandBuffer,
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                shaderEffect.getPipelineLayout(),
+                1,
+                1,
+                &obj.transform.descriptorSet,
+                0,
+                nullptr
+            );
+
             obj.model->bindAndDraw(frameInfo.commandBuffer, descriptorAllocator, descriptorLayoutCache, shaderEffect.getPipelineLayout());
         }
     }
@@ -84,8 +104,8 @@ namespace EngineSystem
     void SimpleRenderSystem::createDescriptorSetPerFrame(const std::string& name, VkDescriptorBufferInfo bufferInfo, VkShaderStageFlags stageFlags)
     {
         const auto setAndBinding = shaderEffect.getSetAndBinding(name);
-        assert(setAndBinding.setId <= 1); // per frame set can only be set0 and set1
-        descriptorBuilderPerFrame[setAndBinding.setId].bind_buffer(
+        assert(setAndBinding.setId == 0); // per frame set can only be set0
+        descriptorBuilderPerFrame.bind_buffer(
             setAndBinding.bindingId, 
             &bufferInfo, 
             setAndBinding.type, 
@@ -95,8 +115,8 @@ namespace EngineSystem
     void SimpleRenderSystem::createDescriptorSetPerFrame(const std::string& name, VkDescriptorImageInfo imageInfo, VkShaderStageFlags stageFlags)
     {
         const auto setAndBinding = shaderEffect.getSetAndBinding(name);
-        assert(setAndBinding.setId <= 1); // per frame set can only be set0 and set1
-        descriptorBuilderPerFrame[setAndBinding.setId].bind_image(
+        assert(setAndBinding.setId == 0); // per frame set can only be set0 and set1
+        descriptorBuilderPerFrame.bind_image(
             setAndBinding.bindingId, 
             &imageInfo, 
             setAndBinding.type, 
@@ -105,10 +125,7 @@ namespace EngineSystem
 
     void SimpleRenderSystem::finishCreateDescriptorSetPerFrame()
     {
-        for(int i=0; i<descriptorBuilderPerFrame.size(); i++)
-        {
-            descriptorBuilderPerFrame[i].build(descriptorSetsPerFrame[i]);
-        }
+        descriptorBuilderPerFrame.build(descriptorSetsPerFrame);
     }
 
     void SimpleRenderSystem::bindDescriptorSetsPerFrame(VkCommandBuffer commandBuffer)
@@ -118,8 +135,8 @@ namespace EngineSystem
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             shaderEffect.getPipelineLayout(),
             0,
-            descriptorSetsPerFrame.size(),
-            descriptorSetsPerFrame.data(),
+            1,
+            &descriptorSetsPerFrame,
             0,
             nullptr
         );

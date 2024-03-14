@@ -14,7 +14,6 @@ It is application's resbonsibility to check whether an object is compatible to a
 
 #include "Vk/lve_pipeline.hpp"
 #include "Vk/lve_device.hpp"
-#include "Vk/lve_shader.hpp"
 #include "Vk/vk_shader_effect.hpp"
 #include "EngineCore/frame_info.hpp"
 
@@ -52,9 +51,9 @@ namespace EngineSystem
         
         Vk::DescriptorAllocator descriptorAllocator;
         Vk::DescriptorLayoutCache& descriptorLayoutCache;
-        std::vector<Vk::DescriptorBuilder> descriptorBuilderPerFrame;
-        std::vector<VkDescriptorSet> descriptorSetsPerFrame;
-        std::vector<VkDescriptorSet> descriptorSetsPerObject;
+
+        Vk::DescriptorBuilder descriptorBuilderPerFrame;
+        VkDescriptorSet descriptorSetsPerFrame;
         
         Vk::ShaderEffect shaderEffect;
         std::unique_ptr<Vk::LvePipeline> lvePipeline;
