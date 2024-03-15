@@ -60,14 +60,66 @@ namespace EngineCore
             }};
     }
 
-    GameObject GameObject::makePointLight(float intensity, float radius, glm::vec3 color)
+    GameObject::GameObject(id_t objId, Vk::LveDevice& lveDevice, Vk::DescriptorAllocator& descriptorAllocator, Vk::DescriptorLayoutCache& descriptorLayoutCache) : 
+        id(objId)
+    {
+        transform.ubo = std::make_shared<Vk::LveBuffer>(
+            lveDevice,
+            sizeof(PerObjectUboData),
+            1,
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        transform.ubo->map();
+
+        auto descriptorInfo = transform.ubo->descriptorInfo();
+        Vk::DescriptorBuilder builder(descriptorLayoutCache, descriptorAllocator);
+        builder.bind_buffer(0, &descriptorInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT).build(transform.descriptorSet);
+    }   
+
+    void GameObject::updateSimpleObject()
+    {
+        PerObjectUboData perObjectUboData
         {
-            GameObject gameObj = GameObject::createGameObject();
-            gameObj.color = color;
-            gameObj.transform.scale.x = radius;
-            gameObj.pointLight = std::make_unique<PointLightComponent>();
-            gameObj.pointLight->lightIntensity = intensity;
-            return gameObj;
-        }
+            transform.mat4(),
+            transform.normalMatrix()
+        };
+        transform.ubo->writeToBuffer(&perObjectUboData);
+    }
+
+    void GameObject::updatePointLightObject()
+    {
+        PointLightPerObjectData perObjectUboData
+        {
+            glm::vec4(transform.translation, 1.0f),
+            glm::vec4(color, pointLight->lightIntensity),
+            transform.scale.x
+        };
+        pointLight->ubo->writeToBuffer(&perObjectUboData);
+    }
+
+    GameObject GameObject::makePointLight(
+        Vk::LveDevice& lveDevice, Vk::DescriptorAllocator& descriptorAllocator, Vk::DescriptorLayoutCache& descriptorLayoutCache,
+        float intensity, float radius, glm::vec3 color)
+    {
+        GameObject gameObj = GameObject::createGameObject(lveDevice, descriptorAllocator, descriptorLayoutCache);
+        gameObj.color = color;
+        gameObj.transform.scale.x = radius;
+        gameObj.pointLight = std::make_unique<PointLightComponent>();
+        gameObj.pointLight->lightIntensity = intensity;
+
+        gameObj.pointLight->ubo = std::make_shared<Vk::LveBuffer>(
+            lveDevice,
+            sizeof(PointLightPerObjectData),
+            1,
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        gameObj.pointLight->ubo->map();
+
+        auto descriptorInfo = gameObj.pointLight->ubo->descriptorInfo();
+        Vk::DescriptorBuilder builder(descriptorLayoutCache, descriptorAllocator);
+        builder.bind_buffer(0, &descriptorInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT).build(gameObj.pointLight->descriptorSet);
+
+        return gameObj;
+    }
 
 }

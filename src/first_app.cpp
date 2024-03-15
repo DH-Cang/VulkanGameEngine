@@ -19,8 +19,7 @@
 #include <chrono>
 
 
-FirstApp::FirstApp():
-    textureManager(lveDevice)
+FirstApp::FirstApp()
 {
     loadGameObjects();
 }
@@ -42,18 +41,20 @@ void FirstApp::run()
     );
     globalUbo->map();
 
-    Vk::DescriptorLayoutCache descriptorLayoutCache{lveDevice.device()};
+    
 
     EngineSystem::SimpleRenderSystem simpleRenderSystem{
         lveDevice, 
         descriptorLayoutCache,
         lveRenderer.getSwapChainRenderPass(),
-        textureManager
+        textureManager,
+        descriptorAllocator
     };
     EngineSystem::PointLightSystem pointLightSystem{
         lveDevice, 
         descriptorLayoutCache,
-        lveRenderer.getSwapChainRenderPass()
+        lveRenderer.getSwapChainRenderPass(),
+        descriptorAllocator
     };
 
     simpleRenderSystem.createDescriptorSetPerFrame("ubo", globalUbo->descriptorInfo(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
@@ -67,7 +68,7 @@ void FirstApp::run()
     EngineCore::Camera camera{};
     camera.setViewTarget(glm::vec3{-1.f, -2.f, 2.f}, glm::vec3{0.0f, 0.0f, 2.5f});
 
-    auto viewerObject = EngineCore::GameObject::createGameObject();
+    auto viewerObject = EngineCore::GameObject::createGameObject(lveDevice, descriptorAllocator, descriptorLayoutCache);
     viewerObject.transform.translation.z = -2.5f;
     EngineCore::KeyboardMovementController cameraController{};
 
@@ -129,29 +130,29 @@ void FirstApp::run()
 
 void FirstApp::loadGameObjects()
 {
-    std::shared_ptr<EngineCore::Model> model = EngineCore::Model::createModelFromFile(lveDevice, textureManager, "./assets/models/flat_vase.obj", "./assets/textures/");
-    auto flatVase = EngineCore::GameObject::createGameObject();
+    std::shared_ptr<EngineCore::Model> model = EngineCore::Model::createModelFromFile(lveDevice, textureManager, descriptorAllocator, descriptorLayoutCache, "./assets/models/flat_vase.obj", "./assets/textures/");
+    auto flatVase = EngineCore::GameObject::createGameObject(lveDevice, descriptorAllocator, descriptorLayoutCache);
     flatVase.model = model;
     flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
     flatVase.transform.scale = glm::vec3{3.0f, 2.0f, 3.0f};
     gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
-    model = EngineCore::Model::createModelFromFile(lveDevice, textureManager, "./assets/models/smooth_vase.obj", "./assets/textures/");
-    auto smoothVase = EngineCore::GameObject::createGameObject();
+    model = EngineCore::Model::createModelFromFile(lveDevice, textureManager, descriptorAllocator, descriptorLayoutCache, "./assets/models/smooth_vase.obj", "./assets/textures/");
+    auto smoothVase = EngineCore::GameObject::createGameObject(lveDevice, descriptorAllocator, descriptorLayoutCache);
     smoothVase.model = model;
     smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
     smoothVase.transform.scale = glm::vec3{3.0f, 2.0f, 3.0f};
     gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
 
-    model = EngineCore::Model::createModelFromFile(lveDevice, textureManager, "./assets/models/quad.obj", "./assets/textures/");
-    auto floor = EngineCore::GameObject::createGameObject();
+    model = EngineCore::Model::createModelFromFile(lveDevice, textureManager, descriptorAllocator, descriptorLayoutCache, "./assets/models/quad.obj", "./assets/textures/");
+    auto floor = EngineCore::GameObject::createGameObject(lveDevice, descriptorAllocator, descriptorLayoutCache);
     floor.model = model;
     floor.transform.translation = {0.0f, 0.5f, 0.0f};
     floor.transform.scale = glm::vec3{3.0f, 1.0f, 3.0f};
     gameObjects.emplace(floor.getId(), std::move(floor));
 
-    model = EngineCore::Model::createModelFromFile(lveDevice, textureManager, "./assets/models/cube.obj", "./assets/textures/");
-    auto cube = EngineCore::GameObject::createGameObject();
+    model = EngineCore::Model::createModelFromFile(lveDevice, textureManager, descriptorAllocator, descriptorLayoutCache, "./assets/models/cube.obj", "./assets/textures/");
+    auto cube = EngineCore::GameObject::createGameObject(lveDevice, descriptorAllocator, descriptorLayoutCache);
     cube.model = model;
     cube.transform.translation = {0.0f, 0.0f, -1.0f};
     cube.transform.scale = glm::vec3{0.25f, 0.25f, 0.25f};
@@ -169,7 +170,7 @@ void FirstApp::loadGameObjects()
 
     for(int i=0; i < lightColors.size(); i++)
     {
-        auto pointLight = EngineCore::GameObject::makePointLight(0.2f);
+        auto pointLight = EngineCore::GameObject::makePointLight(lveDevice, descriptorAllocator, descriptorLayoutCache, 0.2f);
         pointLight.color = lightColors[i];
         auto rotateLight = glm::rotate(
             glm::mat4(1.0f),

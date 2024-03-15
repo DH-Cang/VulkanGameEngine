@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Vk/lve_pipeline.hpp"
 #include "Vk/lve_buffer.hpp"
 
 // libs
@@ -29,7 +28,6 @@ namespace EngineCore
 
         // Vk::LvePipeline& pipeline;
         VkDescriptorSet descriptorSet;
-        bool is_descriptor_allocated = false;
         std::shared_ptr<Vk::LveBuffer> ubo = nullptr;
     };
 }

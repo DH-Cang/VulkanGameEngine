@@ -27,7 +27,7 @@ namespace EngineSystem
     class SimpleRenderSystem
     {
     public:
-        SimpleRenderSystem(Vk::LveDevice& device, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkRenderPass renderPass, EngineCore::TextureManager& textureManager);
+        SimpleRenderSystem(Vk::LveDevice& device, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkRenderPass renderPass, EngineCore::TextureManager& textureManager, Vk::DescriptorAllocator& descriptorAllocator);
         ~SimpleRenderSystem();
 
         SimpleRenderSystem(const SimpleRenderSystem&) = delete;
@@ -47,7 +47,7 @@ namespace EngineSystem
 
         Vk::LveDevice& lveDevice;
         
-        Vk::DescriptorAllocator descriptorAllocator;
+        Vk::DescriptorAllocator& descriptorAllocator;
         Vk::DescriptorLayoutCache& descriptorLayoutCache;
 
         Vk::DescriptorBuilder descriptorBuilderPerFrame;

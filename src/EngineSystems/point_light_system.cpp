@@ -12,16 +12,10 @@
 
 namespace EngineSystem
 {
-    struct PointLightPerObjectData
-    {
-        glm::vec4 position{};
-        glm::vec4 color{};
-        float radius;
-    };
 
-    PointLightSystem::PointLightSystem(Vk::LveDevice& device, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkRenderPass renderPass):
+    PointLightSystem::PointLightSystem(Vk::LveDevice& device, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkRenderPass renderPass, Vk::DescriptorAllocator& descriptorAllocator):
         lveDevice{device},
-        descriptorAllocator(device.device()),
+        descriptorAllocator(descriptorAllocator),
         descriptorLayoutCache(descriptorLayoutCache),
         descriptorBuilderPerFrame(descriptorLayoutCache, descriptorAllocator),
         shaderEffect(device.device(), descriptorLayoutCache, 
@@ -109,39 +103,16 @@ namespace EngineSystem
             // use game obj id to find light obj
             auto& obj = frameInfo.gameObjects.at(it->second);
 
-            if(obj.transform.is_descriptor_allocated == false)
-            {
-                if(obj.transform.ubo == nullptr)
-                {
-                    obj.transform.ubo = std::make_shared<Vk::LveBuffer>(
-                        lveDevice,
-                        sizeof(PointLightPerObjectData),
-                        1,
-                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-                    obj.transform.ubo->map();
-                }
-                auto descriptorInfo = obj.transform.ubo->descriptorInfo();
-                Vk::DescriptorBuilder builder(descriptorLayoutCache, descriptorAllocator);
-                builder.bind_buffer(0, &descriptorInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT).build(obj.transform.descriptorSet);
-                obj.transform.is_descriptor_allocated = true;
-            }
+            obj.updatePointLightObject();
 
-            PointLightPerObjectData perObjectUboData
-            {
-                glm::vec4(obj.transform.translation, 1.0f),
-                glm::vec4(obj.color, obj.pointLight->lightIntensity),
-                obj.transform.scale.x
-            };
-            obj.transform.ubo->writeToBuffer(&perObjectUboData);
-
+            auto descriptorSet = obj.getPointLightDescriptor();
             vkCmdBindDescriptorSets(
                 frameInfo.commandBuffer,
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
                 shaderEffect.getPipelineLayout(),
                 1,
                 1,
-                &obj.transform.descriptorSet,
+                &descriptorSet,
                 0,
                 nullptr
             );

@@ -34,20 +34,6 @@ namespace EngineCore
         for(int i=0; i<lveModels.size(); i++)
         {
             auto& material = materials[i];
-            if(material.is_descriptor_allocated == false)
-            {
-                assert(material.ubo != nullptr);
-                auto descriptorInfo = material.ubo->descriptorInfo();
-                Vk::DescriptorBuilder builder(descriptorLayoutCache, descriptorAllocator);
-                builder.bind_buffer(0, &descriptorInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT);
-                if(material.ambientTextureName.empty() == false)
-                {
-                    auto textureInfo = textureManager.getTexture(material.ambientTextureName)->getDescriptorImageInfo();
-                    builder.bind_image(1, &textureInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
-                }
-                builder.build(material.descriptorSet);
-                material.is_descriptor_allocated = true;
-            }
 
             vkCmdBindDescriptorSets(
                 commandBuffer,
@@ -66,7 +52,13 @@ namespace EngineCore
         }
     }
     
-    std::unique_ptr<Model> Model::createModelFromFile(Vk::LveDevice& device, TextureManager& textureManager, const std::string& objPath, const std::string& mtlBasePath)
+    std::unique_ptr<Model> Model::createModelFromFile(
+            Vk::LveDevice& device, 
+            TextureManager& textureManager, 
+            Vk::DescriptorAllocator& descriptorAllocator, 
+            Vk::DescriptorLayoutCache& descriptorLayoutCache, 
+            const std::string& objPath, 
+            const std::string& mtlBasePath)
     {
         auto ret = std::make_unique<Model>(device);
 
@@ -187,9 +179,19 @@ namespace EngineCore
                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
                 ret->materials.back().ubo->map();
                 ret->materials.back().ubo->writeToBuffer(&ret->materials.back().materialData);
+
+                auto descriptorInfo = ret->materials.back().ubo->descriptorInfo();
+                Vk::DescriptorBuilder builder(descriptorLayoutCache, descriptorAllocator);
+                builder.bind_buffer(0, &descriptorInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT);
+                assert(ret->materials.back().ambientTextureName.empty() == false);
+                auto textureInfo = textureManager.getTexture(ret->materials.back().ambientTextureName)->getDescriptorImageInfo();
+                builder.bind_image(1, &textureInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+                builder.build(ret->materials.back().descriptorSet);
             }
         }
         printf("Load %s, shapes num %d, material num %d\n", objPath.c_str(), ret->lveModels.size(), ret->materials.size());
+
+        
 
         return ret;
     }

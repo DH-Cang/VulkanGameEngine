@@ -30,8 +30,10 @@ private:
     Platform::MyWindow myWindow{WIDTH, HEIGHT, "hello vulkan"};
     Vk::LveDevice lveDevice{myWindow};
     Vk::LveRenderer lveRenderer{myWindow, lveDevice};
+    EngineCore::TextureManager textureManager{lveDevice};
+    Vk::DescriptorAllocator descriptorAllocator{lveDevice.device()};
+    Vk::DescriptorLayoutCache descriptorLayoutCache{lveDevice.device()};
 
     EngineCore::GameObject::Map gameObjects;
 
-    EngineCore::TextureManager textureManager;
 };

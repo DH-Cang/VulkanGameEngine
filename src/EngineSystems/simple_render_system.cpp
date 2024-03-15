@@ -11,16 +11,10 @@
 
 namespace EngineSystem
 {
-    struct PerObjectUboData
-    {
-        glm::mat4 modelMatrix{1.0f};
-        glm::mat4 normalMatrix{1.0f};
-        //alignas(16) glm::vec3 color; // make sure the memory align as 16 bytes, to match the data alignment in shader
-    };
 
-    SimpleRenderSystem::SimpleRenderSystem(Vk::LveDevice& device, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkRenderPass renderPass, EngineCore::TextureManager& textureManager):
+    SimpleRenderSystem::SimpleRenderSystem(Vk::LveDevice& device, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkRenderPass renderPass, EngineCore::TextureManager& textureManager, Vk::DescriptorAllocator& descriptorAllocator):
         lveDevice{device},
-        descriptorAllocator(device.device()),
+        descriptorAllocator(descriptorAllocator),
         descriptorLayoutCache(descriptorLayoutCache),
         descriptorBuilderPerFrame(descriptorLayoutCache, descriptorAllocator),
         shaderEffect(device.device(), descriptorLayoutCache, 
@@ -62,38 +56,16 @@ namespace EngineSystem
             auto& obj = kv.second;
             if(obj.model == nullptr) continue;
 
-            if(obj.transform.is_descriptor_allocated == false)
-            {
-                if(obj.transform.ubo == nullptr)
-                {
-                    obj.transform.ubo = std::make_shared<Vk::LveBuffer>(
-                        lveDevice,
-                        sizeof(PerObjectUboData),
-                        1,
-                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-                    obj.transform.ubo->map();
-                }
-                auto descriptorInfo = obj.transform.ubo->descriptorInfo();
-                Vk::DescriptorBuilder builder(descriptorLayoutCache, descriptorAllocator);
-                builder.bind_buffer(0, &descriptorInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT).build(obj.transform.descriptorSet);
-                obj.transform.is_descriptor_allocated = true;
-            }
+            obj.updateSimpleObject();
 
-            PerObjectUboData perObjectUboData
-            {
-                obj.transform.mat4(),
-                obj.transform.normalMatrix()
-            };
-            obj.transform.ubo->writeToBuffer(&perObjectUboData);
-
+            auto descriptorSet = obj.getSimpleDescriptor();
             vkCmdBindDescriptorSets(
                 frameInfo.commandBuffer,
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
                 shaderEffect.getPipelineLayout(),
                 1,
                 1,
-                &obj.transform.descriptorSet,
+                &descriptorSet,
                 0,
                 nullptr
             );

@@ -26,7 +26,7 @@ namespace EngineSystem
     class PointLightSystem
     {
     public:
-        PointLightSystem(Vk::LveDevice& device, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkRenderPass renderPass);
+        PointLightSystem(Vk::LveDevice& device, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkRenderPass renderPass, Vk::DescriptorAllocator& descriptorAllocator);
         ~PointLightSystem();
 
         PointLightSystem(const PointLightSystem&) = delete;
@@ -46,7 +46,7 @@ namespace EngineSystem
 
         Vk::LveDevice& lveDevice;
         
-        Vk::DescriptorAllocator descriptorAllocator;
+        Vk::DescriptorAllocator& descriptorAllocator;
         Vk::DescriptorLayoutCache& descriptorLayoutCache;
 
         Vk::DescriptorBuilder descriptorBuilderPerFrame;
