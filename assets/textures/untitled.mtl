@@ -1,6 +1,11 @@
 newmtl Material
 Ka 0.000 0.000 1.000
+map_Ka wood.png
+
 newmtl Material2
 Ka 0.000 1.000 0.000
+map_Ka cotton.png
+
 newmtl Material3
 Ka 1.000 0.000 0.000
+map_Ka cotton.png

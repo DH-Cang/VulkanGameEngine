@@ -18,14 +18,15 @@ namespace EngineSystem
         //alignas(16) glm::vec3 color; // make sure the memory align as 16 bytes, to match the data alignment in shader
     };
 
-    SimpleRenderSystem::SimpleRenderSystem(Vk::LveDevice& device, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkRenderPass renderPass):
+    SimpleRenderSystem::SimpleRenderSystem(Vk::LveDevice& device, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkRenderPass renderPass, EngineCore::TextureManager& textureManager):
         lveDevice{device},
         descriptorAllocator(device.device()),
         descriptorLayoutCache(descriptorLayoutCache),
         descriptorBuilderPerFrame(descriptorLayoutCache, descriptorAllocator),
         shaderEffect(device.device(), descriptorLayoutCache, 
         "./build/ShaderBin/simple_shader.vert.spv", 
-        "./build/ShaderBin/simple_shader.frag.spv")
+        "./build/ShaderBin/simple_shader.frag.spv"),
+        textureManager(textureManager)
     {
         createPipeline(renderPass);
     }
@@ -97,7 +98,7 @@ namespace EngineSystem
                 nullptr
             );
 
-            obj.model->bindAndDraw(frameInfo.commandBuffer, descriptorAllocator, descriptorLayoutCache, shaderEffect.getPipelineLayout());
+            obj.model->bindAndDraw(frameInfo.commandBuffer, descriptorAllocator, descriptorLayoutCache, shaderEffect.getPipelineLayout(), textureManager);
         }
     }
 

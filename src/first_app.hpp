@@ -3,9 +3,9 @@
 #include "Platform/my_window.hpp"
 #include "Vk/lve_device.hpp"
 #include "Vk/lve_renderer.hpp"
-#include "Vk/lve_texture.hpp"
 
 #include "EngineCore/game_object.hpp"
+#include "EngineCore/texture_manager.hpp"
 
 // std
 #include <memory>
@@ -33,5 +33,5 @@ private:
 
     EngineCore::GameObject::Map gameObjects;
 
-    std::unique_ptr<Vk::LveTexture> tempTexture;
+    EngineCore::TextureManager textureManager;
 };

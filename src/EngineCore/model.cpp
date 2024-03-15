@@ -8,6 +8,7 @@
 
 // std
 #include <stdexcept>
+#include <filesystem>
 
 namespace std
 {
@@ -28,7 +29,7 @@ namespace EngineCore
 {
     Model::Model(Vk::LveDevice& device): lveDevice{device} {}
 
-    void Model::bindAndDraw(VkCommandBuffer commandBuffer, Vk::DescriptorAllocator& descriptorAllocator, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkPipelineLayout pipelineLayout)
+    void Model::bindAndDraw(VkCommandBuffer commandBuffer, Vk::DescriptorAllocator& descriptorAllocator, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkPipelineLayout pipelineLayout, TextureManager& textureManager)
     {
         for(int i=0; i<lveModels.size(); i++)
         {
@@ -38,7 +39,13 @@ namespace EngineCore
                 assert(material.ubo != nullptr);
                 auto descriptorInfo = material.ubo->descriptorInfo();
                 Vk::DescriptorBuilder builder(descriptorLayoutCache, descriptorAllocator);
-                builder.bind_buffer(0, &descriptorInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT).build(material.descriptorSet);
+                builder.bind_buffer(0, &descriptorInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT);
+                if(material.ambientTextureName.empty() == false)
+                {
+                    auto textureInfo = textureManager.getTexture(material.ambientTextureName)->getDescriptorImageInfo();
+                    builder.bind_image(1, &textureInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+                }
+                builder.build(material.descriptorSet);
                 material.is_descriptor_allocated = true;
             }
 
@@ -59,7 +66,7 @@ namespace EngineCore
         }
     }
     
-    std::unique_ptr<Model> Model::createModelFromFile(Vk::LveDevice& device, const std::string& objPath, const std::string& mtlBasePath)
+    std::unique_ptr<Model> Model::createModelFromFile(Vk::LveDevice& device, TextureManager& textureManager, const std::string& objPath, const std::string& mtlBasePath)
     {
         auto ret = std::make_unique<Model>(device);
 
@@ -85,6 +92,14 @@ namespace EngineCore
             model_material.materialData.ambient[1] = obj_material.ambient[1];
             model_material.materialData.ambient[2] = obj_material.ambient[2];
             model_material.materialData.blinn_factor = 32.0f;
+
+            if(obj_material.ambient_texname.empty() == false)
+            {
+                std::filesystem::path ambientTextureName = obj_material.ambient_texname;
+                ambientTextureName = mtlBasePath / ambientTextureName;
+                textureManager.addTexture(ambientTextureName.string());
+                model_material.ambientTextureName = ambientTextureName.string();
+            }
         }
 
         std::vector<Vk::LveModel::Builder> builder_array(materialNum); // for each material, it has a builder

@@ -23,6 +23,8 @@ namespace EngineCore
             float blinn_factor = 32.0f;
             // ....        
         } materialData;
+
+        std::string ambientTextureName;
         
 
         // Vk::LvePipeline& pipeline;

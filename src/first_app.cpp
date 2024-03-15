@@ -19,7 +19,8 @@
 #include <chrono>
 
 
-FirstApp::FirstApp()
+FirstApp::FirstApp():
+    textureManager(lveDevice)
 {
     loadGameObjects();
 }
@@ -46,7 +47,8 @@ void FirstApp::run()
     EngineSystem::SimpleRenderSystem simpleRenderSystem{
         lveDevice, 
         descriptorLayoutCache,
-        lveRenderer.getSwapChainRenderPass()
+        lveRenderer.getSwapChainRenderPass(),
+        textureManager
     };
     EngineSystem::PointLightSystem pointLightSystem{
         lveDevice, 
@@ -55,7 +57,6 @@ void FirstApp::run()
     };
 
     simpleRenderSystem.createDescriptorSetPerFrame("ubo", globalUbo->descriptorInfo(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
-    simpleRenderSystem.createDescriptorSetPerFrame("texSampler", tempTexture->getDescriptorImageInfo(), VK_SHADER_STAGE_FRAGMENT_BIT);
     simpleRenderSystem.finishCreateDescriptorSetPerFrame();
 
     pointLightSystem.createDescriptorSetPerFrame("ubo", globalUbo->descriptorInfo(), VK_SHADER_STAGE_VERTEX_BIT);
@@ -128,30 +129,28 @@ void FirstApp::run()
 
 void FirstApp::loadGameObjects()
 {
-    tempTexture = Vk::LveTexture::createTextureFromFile(lveDevice, ".\\assets\\textures\\70591182.jpg");
-
-    std::shared_ptr<EngineCore::Model> model = EngineCore::Model::createModelFromFile(lveDevice, "./assets/models/flat_vase.obj", "./assets/models/");
+    std::shared_ptr<EngineCore::Model> model = EngineCore::Model::createModelFromFile(lveDevice, textureManager, "./assets/models/flat_vase.obj", "./assets/textures/");
     auto flatVase = EngineCore::GameObject::createGameObject();
     flatVase.model = model;
     flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
     flatVase.transform.scale = glm::vec3{3.0f, 2.0f, 3.0f};
     gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
-    model = EngineCore::Model::createModelFromFile(lveDevice, "./assets/models/smooth_vase.obj", "./assets/models/");
+    model = EngineCore::Model::createModelFromFile(lveDevice, textureManager, "./assets/models/smooth_vase.obj", "./assets/textures/");
     auto smoothVase = EngineCore::GameObject::createGameObject();
     smoothVase.model = model;
     smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
     smoothVase.transform.scale = glm::vec3{3.0f, 2.0f, 3.0f};
     gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
 
-    model = EngineCore::Model::createModelFromFile(lveDevice, "./assets/models/quad.obj", "./assets/models/");
+    model = EngineCore::Model::createModelFromFile(lveDevice, textureManager, "./assets/models/quad.obj", "./assets/textures/");
     auto floor = EngineCore::GameObject::createGameObject();
     floor.model = model;
     floor.transform.translation = {0.0f, 0.5f, 0.0f};
     floor.transform.scale = glm::vec3{3.0f, 1.0f, 3.0f};
     gameObjects.emplace(floor.getId(), std::move(floor));
 
-    model = EngineCore::Model::createModelFromFile(lveDevice, "./assets/models/cube.obj", "./assets/models/");
+    model = EngineCore::Model::createModelFromFile(lveDevice, textureManager, "./assets/models/cube.obj", "./assets/textures/");
     auto cube = EngineCore::GameObject::createGameObject();
     cube.model = model;
     cube.transform.translation = {0.0f, 0.0f, -1.0f};

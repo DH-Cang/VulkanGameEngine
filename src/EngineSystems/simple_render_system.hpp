@@ -16,6 +16,7 @@ It is application's resbonsibility to check whether an object is compatible to a
 #include "Vk/lve_device.hpp"
 #include "Vk/vk_shader_effect.hpp"
 #include "EngineCore/frame_info.hpp"
+#include "EngineCore/texture_manager.hpp"
 
 // std
 #include <memory>
@@ -26,7 +27,7 @@ namespace EngineSystem
     class SimpleRenderSystem
     {
     public:
-        SimpleRenderSystem(Vk::LveDevice& device, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkRenderPass renderPass);
+        SimpleRenderSystem(Vk::LveDevice& device, Vk::DescriptorLayoutCache& descriptorLayoutCache, VkRenderPass renderPass, EngineCore::TextureManager& textureManager);
         ~SimpleRenderSystem();
 
         SimpleRenderSystem(const SimpleRenderSystem&) = delete;
@@ -54,6 +55,8 @@ namespace EngineSystem
         
         Vk::ShaderEffect shaderEffect;
         std::unique_ptr<Vk::LvePipeline> lvePipeline;
+
+        EngineCore::TextureManager& textureManager;
     };
 
 }
