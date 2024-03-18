@@ -24,6 +24,8 @@ namespace EngineCore
         } materialData;
 
         std::string ambientTextureName;
+        std::string roughnessTextureName;
+        std::string metallicTextureName;
         
 
         // Vk::LvePipeline& pipeline;

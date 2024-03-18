@@ -1,11 +1,17 @@
 newmtl Material
 Ka 0.000 0.000 1.000
-map_Ka wood.png
+map_Ka speckled-rust_albedo.png
+map_Pr speckled-rust_roughness.png
+map_Pm speckled-rust_metallic.png
 
 newmtl Material2
 Ka 0.000 1.000 0.000
-map_Ka cotton.png
+map_Ka knotty-plywood_albedo.png
+map_Pr knotty-plywood_roughness.png
+map_Pm knotty-plywood_metallic.png
 
 newmtl Material3
 Ka 1.000 0.000 0.000
-map_Ka cotton.png
+map_Ka houndstooth-fabric-weave_albedo.png
+map_Pr houndstooth-fabric-weave_Roughness.png
+map_Pm houndstooth-fabric-weave_metallic.png

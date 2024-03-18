@@ -92,6 +92,20 @@ namespace EngineCore
                 textureManager.addTexture(ambientTextureName.string());
                 model_material.ambientTextureName = ambientTextureName.string();
             }
+            if(obj_material.roughness_texname.empty() == false)
+            {
+                std::filesystem::path roughnessTextureName = obj_material.roughness_texname;
+                roughnessTextureName = mtlBasePath / roughnessTextureName;
+                textureManager.addTexture(roughnessTextureName.string());
+                model_material.roughnessTextureName = roughnessTextureName.string();
+            }
+            if(obj_material.metallic_texname.empty() == false)
+            {
+                std::filesystem::path metallicTextureName = obj_material.metallic_texname;
+                metallicTextureName = mtlBasePath / metallicTextureName;
+                textureManager.addTexture(metallicTextureName.string());
+                model_material.metallicTextureName = metallicTextureName.string();
+            }
         }
 
         std::vector<Vk::LveModel::Builder> builder_array(materialNum); // for each material, it has a builder
@@ -183,9 +197,19 @@ namespace EngineCore
                 auto descriptorInfo = ret->materials.back().ubo->descriptorInfo();
                 Vk::DescriptorBuilder builder(descriptorLayoutCache, descriptorAllocator);
                 builder.bind_buffer(0, &descriptorInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT);
+
                 assert(ret->materials.back().ambientTextureName.empty() == false);
-                auto textureInfo = textureManager.getTexture(ret->materials.back().ambientTextureName)->getDescriptorImageInfo();
-                builder.bind_image(1, &textureInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+                auto ambientTextureInfo = textureManager.getTexture(ret->materials.back().ambientTextureName)->getDescriptorImageInfo();
+                builder.bind_image(1, &ambientTextureInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+
+                assert(ret->materials.back().metallicTextureName.empty() == false);
+                auto matallicTextureInfo = textureManager.getTexture(ret->materials.back().metallicTextureName)->getDescriptorImageInfo();
+                builder.bind_image(2, &matallicTextureInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+
+                assert(ret->materials.back().roughnessTextureName.empty() == false);
+                auto roughnessTextureInfo = textureManager.getTexture(ret->materials.back().roughnessTextureName)->getDescriptorImageInfo();
+                builder.bind_image(3, &roughnessTextureInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+
                 builder.build(ret->materials.back().descriptorSet);
             }
         }
